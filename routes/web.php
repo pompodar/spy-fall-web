@@ -14,18 +14,20 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/game/{gameCode}', function () {
+Route::get('/game/{gameId}/{gameCode}', function ($gameId, $gameCode) {
     return Inertia::render('Game', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'gameId' => $gameId,
+        'gameCode' => $gameCode,
     ]);
-});
+})->middleware(['auth', 'verified'])->name('game');
 
 Route::get('/game_lobby', function () {
     return Inertia::render('GameLobby');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified'])->name('game_lobby');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

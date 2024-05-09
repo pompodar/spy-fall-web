@@ -19,8 +19,10 @@ Route::resource('rounds', RoundController::class);
 
 Route::resource('scores', ScoreController::class);
 
-Route::post('/create-game', [GameRoomController::class, 'create']);
+Route::post('/create-game/{user_name}', [GameRoomController::class, 'create']);
 
 Route::post('/join-game', [GameRoomController::class, 'join']);
 
+Route::get('/game/{gameCode}/players', [PlayerController::class, 'getPlayersByGameCode']);
 
+Route::delete('/game/{gameId}/{userName}/leave', [GameRoomController::class, 'leaveGame']);

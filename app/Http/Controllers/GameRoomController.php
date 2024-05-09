@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\GameRoom;
+use App\Models\Player;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class GameRoomController extends Controller
 {
@@ -47,8 +49,16 @@ class GameRoomController extends Controller
         return response()->json(['message' => 'Game Room deleted successfully']);
     }
 
-    public function create(Request $request)
+    public function create($user_name, Request $request)
     {
+        // Check if the user is already associated with a game
+        $existingPlayer = Player::where('name', $user_name)->first();
+        if ($existingPlayer) {
+            $gameRoomCode = $existingPlayer->gameRoom->code;
+            
+            return response()->json(['error' => 'You are already in a game', 'game_code' => $gameRoomCode], 403);
+        }
+
         // Generate a random game code (you can customize this as needed)
         $gameCode = strtoupper(Str::random(6));
 
@@ -58,20 +68,75 @@ class GameRoomController extends Controller
             // Add any other game data you need to store
         ]);
 
+        $game = GameRoom::where('code', $gameCode)->first();
+
+        // If the game does not exist, return an error response
+        if (!$game) {
+            return response()->json(['error' => 'Game not found'], 404);
+        }
+
+        // Create a new player for the game
+        $player = Player::create([
+            'game_room_id' => $game->id,
+            'name' => $user_name,
+            'role' => 'common',
+        ]);
+
         // Return the game code
-        return response()->json(['gameCode' => $game->code], 201);
+        return response()->json(['gameId' => $game->id, 'gameCode' => $game->code, $player], 201);
     }
 
     public function join(Request $request)
     {
         $request->validate([
-            'gameCode' => 'required|exists:games,code',
-            // Add any other validation rules you need
+            'gameCode' => 'required|exists:game_rooms,code',
+            'userName' => 'required'
         ]);
 
-        // You can add logic here to handle joining the game
-        // For example, adding the user to the game session
+        $game = GameRoom::where('code', $request->input('gameCode'))->first();
 
-        return response()->json(['message' => 'Successfully joined the game'], 200);
+        // If the game does not exist, return an error response
+        if (!$game) {
+            return response()->json(['error' => 'Game not found'], 404);
+        }
+
+        // Check if the user is already associated with a game
+        $existingPlayer = Player::where('name', $request->input('userName'))->first();
+        if (!$existingPlayer) {
+            // Create a new player for the game
+            $player = Player::create([
+                'game_room_id' => $game->id,
+                'name' => $request->input('userName'),
+                'role' => 'common',
+            ]);
+        }
+
+        // Return the player information
+        return response()->json(['gameId' => $game->id, 'gameCode' => $game->code], 201);
     }
+
+    public function leaveGame($gameId, $userName)
+    {
+
+        $player = Player::where('game_room_id', $gameId)->where('name', $userName)->first();
+        
+        if ($player) {
+            $player->delete();
+
+            // Check if the game has no more players
+            $remainingPlayers = Player::where('game_room_id', $gameId)->count();
+            if ($remainingPlayers === 0) {
+                // Delete the game room if there are no remaining players
+                GameRoom::where('id', $gameId)->delete();
+                return response()->json(['message' => 'Game deleted successfully'], 200);
+            }
+
+            return response()->json(['message' => 'Left the game successfully'], 200);
+
+        } else {
+            // Player not found or not in the game
+            return response()->json(['error' => 'Player not found or not in the game'], 404);
+        }
+    }
+
 }

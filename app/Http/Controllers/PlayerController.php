@@ -51,4 +51,15 @@ class PlayerController extends Controller
 
         return response()->json(['message' => 'Player deleted successfully']);
     }
+
+    public function getPlayersByGameCode($gameCode)
+    {
+        // Retrieve players based on the provided game code
+        $players = Player::whereHas('gameRoom', function ($query) use ($gameCode) {
+            $query->where('game_room_id', $gameCode);
+        })->get();
+
+        // Return the players as JSON response
+        return response()->json($players);
+    }
 }
