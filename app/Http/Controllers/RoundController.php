@@ -97,7 +97,7 @@ class RoundController extends Controller
     private function generateRoundLocations()
     {
         // Define the list of regular locations (excluding the spy location)
-        $locations = ['Casino', 'Space Station', 'Traveling Circus', 'Pirate Ship', 'Beach'];
+        $locations = ['Казино', 'Космічна станція', 'Цирк', 'Піратський корабель', 'Пляж', 'Кінотеатр', 'Кімната'];
 
         // Shuffle the list of locations to randomize them
         shuffle($locations);

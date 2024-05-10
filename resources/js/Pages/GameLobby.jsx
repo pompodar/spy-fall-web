@@ -1,6 +1,20 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { db } from "./config/firebase";
+import {
+  collection,
+  query, 
+  orderBy, 
+  onSnapshot,
+  getDocs,
+  addDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  getDoc, 
+  doc,
+} from "firebase/firestore";
 import axios from 'axios';
 
 export default function GameLobby({ auth }) {
@@ -19,6 +33,19 @@ export default function GameLobby({ auth }) {
       console.log(response);
       setNewGameCode(response.data.gameId);
       setCreateGameError(null);
+
+      const gameId = response.data.gameId.toString();
+
+      try {
+        // Add the document to the 'gameRooms' collection with the custom ID
+        await setDoc(doc(db, "gameRooms", gameId), {
+          players: [userName],
+        });
+        console.log('Game added to Firestore successfully');
+      } catch (err) {
+        console.error('Error adding game to Firestore:', err);
+      }
+
       // Redirect to the game window
       router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
     } catch (error) {
@@ -36,6 +63,37 @@ export default function GameLobby({ auth }) {
       console.log('Join game response:', response.data);
       // Reset the input field after successful submission
       setJoinGameCode('');
+
+      const gameDocRef = doc(db, "gameRooms", response.data.gameId.toString());
+
+      try {
+        // Get the current data of the game document
+        const gameDocSnap = await getDoc(gameDocRef);
+        if (gameDocSnap.exists()) {
+          
+          // Extract the current players array
+          const currentPlayers = gameDocSnap.data().players || [];
+      
+          // Check if the user is already in the players array
+          if (!currentPlayers.includes(userName)) {
+            // Add the new user to the players array
+            const updatedPlayers = [...currentPlayers, userName];
+      
+            // Update the game document with the new players array
+            await updateDoc(gameDocRef, {
+              players: updatedPlayers,
+            });
+      
+            console.log('User added to the game successfully');
+          } else {
+            console.log('User already exists in the game');
+          }
+        } else {
+          console.error('Game document does not exist');
+        }
+      } catch (err) {
+        console.error('Error updating game document:', err);
+      }
       // Redirect to the game window
       router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
     } catch (error) {
