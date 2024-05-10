@@ -23,7 +23,7 @@ Route::post('/create-game/{user_name}', [GameRoomController::class, 'create']);
 
 Route::post('/join-game', [GameRoomController::class, 'join']);
 
-Route::get('/game/{gameCode}/players', [PlayerController::class, 'getPlayersByGameCode'])->middleware(['web']);
+Route::get('/game/{gameId}/players', [PlayerController::class, 'getPlayersByGameCode'])->middleware(['web']);
 
 Route::get('/game/{userName}/admin', [PlayerController::class, 'getAdmin'])->middleware(['web']);
 

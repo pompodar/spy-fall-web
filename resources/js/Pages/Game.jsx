@@ -18,7 +18,7 @@ export default function Game({ auth, gameId, gameCode }) {
       // Fetch players for the current game
       const fetchPlayers = async () => {
           try {
-              const response = await axios.get(`/api/game/${userName}/players`);
+              const response = await axios.get(`/api/game/${gameId}/players`);
 
               setPlayers(response.data.players);
           } catch (error) {
@@ -53,8 +53,6 @@ export default function Game({ auth, gameId, gameCode }) {
     const fetchRound = async () => {
         try {
             const response = await axios.post(`/api/round/${gameId}`);
-
-            console.log(response.data);
 
             if (!response.data.round) {
               //setRound(0);
@@ -98,36 +96,24 @@ export default function Game({ auth, gameId, gameCode }) {
   const isSpy = (playerId, spyId) => playerId === spyId;
 
   return (
-    <AuthenticatedLayout
-      user={auth.user}
-      header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Spyfall</h2>}
-    >
+    <AuthenticatedLayout user={auth.user}>
       <Head title="Spyfall" />
-
-      <div className="game">
-            <h1>Game {gameCode}</h1>
-
-            <h2>Round: {round}</h2>
-
-            {admin.isAdmin && 
-              (            
-                  <button onClick={startNewRound}>Start New Round</button>
-              )
-            }
-
-            {console.log(admin)}
-
-            <button onClick={leaveGame}>Leave Game</button>
-
-            {players.map(player => (
-                <div key={player.id} className="player-card">
-                    <h2>{player.name + " " + (player.role === 'administrator' ? "admin" : "")}</h2>
-                    <p>Location: {isSpy(player.id, player.spy_id) ? 'Spy' : player.location}</p>
-                                
-                </div>
-            ))}
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <h1 className="text-3xl font-bold mb-4">Game {gameCode}</h1>
+        <h2 className="text-xl font-semibold mb-4">Round: {round}</h2>
+        {admin.isAdmin &&
+          <button onClick={startNewRound} className="bg-blue-500 text-white px-4 py-2 rounded-md mr-4">Start New Round</button>
+        }
+        <button onClick={leaveGame} className="bg-red-500 text-white px-4 py-2 rounded-md">Leave Game</button>
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {players.map(player => (
+            <div key={player.id} className="bg-gray-100 p-4 rounded-md">
+              <h2 className="text-lg font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-blue-500">(Admin)</span>}</h2>
+              <p className="text-gray-700">{isSpy(player.id, player.spy_id) ? 'Spy' : player.location}</p>
+            </div>
+          ))}
         </div>
-      
+      </div>
     </AuthenticatedLayout>
   );
 }
