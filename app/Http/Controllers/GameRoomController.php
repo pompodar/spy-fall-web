@@ -79,7 +79,7 @@ class GameRoomController extends Controller
         $player = Player::create([
             'game_room_id' => $game->id,
             'name' => $user_name,
-            'role' => 'common',
+            'role' => 'administrator',
         ]);
 
         // Return the game code
@@ -107,7 +107,7 @@ class GameRoomController extends Controller
             $player = Player::create([
                 'game_room_id' => $game->id,
                 'name' => $request->input('userName'),
-                'role' => 'common',
+                'role' => 'guest',
             ]);
         }
 

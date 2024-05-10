@@ -23,6 +23,14 @@ Route::post('/create-game/{user_name}', [GameRoomController::class, 'create']);
 
 Route::post('/join-game', [GameRoomController::class, 'join']);
 
-Route::get('/game/{gameCode}/players', [PlayerController::class, 'getPlayersByGameCode']);
+Route::get('/game/{gameCode}/players', [PlayerController::class, 'getPlayersByGameCode'])->middleware(['web']);
+
+Route::get('/game/{userName}/admin', [PlayerController::class, 'getAdmin'])->middleware(['web']);
 
 Route::delete('/game/{gameId}/{userName}/leave', [GameRoomController::class, 'leaveGame']);
+
+Route::post('/games/{gameId}/{round}/rounds', [RoundController::class, 'startNewRound'])->middleware(['web']);
+
+Route::post('/round/{gameId}', [RoundController::class, 'getGameRound'])->middleware(['web']);
+
+

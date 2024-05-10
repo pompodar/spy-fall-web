@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class GameRoom extends Model
 {
-    protected $fillable = ['code'];
+    protected $fillable = ['code', 'round'];
 
     public function players()
     {

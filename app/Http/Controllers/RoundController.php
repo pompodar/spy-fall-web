@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Round;
 use Illuminate\Http\Request;
+use App\Models\Player;
+use App\Models\GameRoom;
 
 class RoundController extends Controller
 {
@@ -52,16 +54,22 @@ class RoundController extends Controller
         return response()->json(['message' => 'Round deleted successfully']);
     }
 
-    public function startNewRound(Request $request, $gameId)
-    {
-        // Logic to start a new round...
+    public function startNewRound(Request $request, $gameId, $round)
+    {        
+        $current_user = $request->user();
         
         // Generate a set of locations for the round (excluding the spy location)
         $locations = $this->generateRoundLocations();
+
+        $game = GameRoom::where('id', $gameId)->first();
+
+        // Update the round attribute
+        $game->update(['round' => $round]);
         
         // Randomly choose one player as the spy
         $players = $game->players;
         $spyIndex = rand(0, count($players) - 1);
+
         $spy = $players[$spyIndex];
         $spy->update(['location' => 'Spy']);
         
@@ -72,9 +80,18 @@ class RoundController extends Controller
                 $player->update(['location' => $location]);
             }
         }
+
+        $players->transform(function ($player) use ($current_user) {
+            if ($player->name === $current_user->name) {
+                $player->makeVisible('location');
+            } else {
+                $player->makeHidden('location');
+            }
+            return $player;
+        });
         
         // Return the updated players with their assigned locations
-        return response()->json($players);
+        return response()->json(['players' => $players, 'round' => $round]);
     }
 
     private function generateRoundLocations()
@@ -86,6 +103,23 @@ class RoundController extends Controller
         shuffle($locations);
 
         return $locations;
+    }
+
+    public function getGameRound($gameId)
+    {
+        $gameRoom = GameRoom::where('id', $gameId)->first();
+
+        // If the game room doesn't exist, return an error response
+        if (!$gameRoom) {
+            return response()->json(['error' => 'Game room not found'], 404);
+        }
+
+        // Retrieve the round of the game room
+        $round = $gameRoom->round;
+
+        // Return the players as JSON response
+        return response()->json(['round' => $round]);
+
     }
 
 }
