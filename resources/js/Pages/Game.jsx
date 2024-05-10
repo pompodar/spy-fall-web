@@ -24,46 +24,52 @@ export default function Game({ auth, gameId, gameCode }) {
   const [round, setRound] = useState(0);
 
   const [game, setGame] = useState([]);
-  const usersCollectionRef = collection(db, "gameRooms");
 
   const userName = auth.user.name;
 
-  let fetchInterval;
+  // Fetch players for the current game
+  const fetchPlayers = async () => {
+      try {
+          const response = await axios.get(`/api/game/${gameId}/players`);
 
-  // useEffect(() => {
-  //   const getGames = async () => {
-  //     const data = await getDocs(usersCollectionRef);
+          setPlayers(response.data.players);
+      } catch (error) {
+          console.error('Error fetching players:', error);
+      }
+  };
 
-  //     setGame(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
-  //   };
+  // Fetch round for the current game
+  const fetchRound = async () => {
+      try {
+          const response = await axios.post(`/api/round/${gameId}`);
 
-  //   getGames();
-  // }, []);
+          if (!response.data.round) {
+            //setRound(0);
+          } else {
+            setRound(response.data.round);
+          }
+      } catch (error) {
+          console.error('Error fetching players:', error);
+      }
+  };
 
   useEffect(() => {
     const q = query(collection(db, 'gameRooms'))
     onSnapshot(q, (querySnapshot) => {
-      setGame(querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        data: doc.data()
-      })))
+      // setGame(querySnapshot.docs.map(doc => ({
+      //   id: doc.id,
+      //   data: doc.data()
+      // })))
+
+      fetchPlayers();
+
+      fetchRound();
+
     })
 
-    console.log(game);
   },[])
 
   useEffect(() => {
-      // Fetch players for the current game
-      const fetchPlayers = async () => {
-          try {
-              const response = await axios.get(`/api/game/${gameId}/players`);
-
-              setPlayers(response.data.players);
-          } catch (error) {
-              console.error('Error fetching players:', error);
-          }
-      };
-
       const fetchAdmin = async () => {
         try {
             const response = await axios.get(`/api/game/${userName}/admin`);
@@ -76,35 +82,13 @@ export default function Game({ auth, gameId, gameCode }) {
 
     fetchAdmin();
 
-      if (round !== 0 && round !== null) return;
-
-      fetchInterval = setInterval(() => {
-        fetchPlayers();
-      }, 1000);
-
-      return () => clearInterval(fetchInterval);
+    fetchPlayers();
 
   }, [round]);
 
   useEffect(() => {
-    // Fetch players for the current game
-    const fetchRound = async () => {
-        try {
-            const response = await axios.post(`/api/round/${gameId}`);
-
-            if (!response.data.round) {
-              //setRound(0);
-            } else {
-              setRound(response.data.round);
-            }
-        } catch (error) {
-            console.error('Error fetching players:', error);
-        }
-    };
-
-    setInterval(() => {
-      fetchRound();
-    }, 1000);
+    
+    fetchRound();
 
 }, [round]);
 
@@ -113,6 +97,21 @@ export default function Game({ auth, gameId, gameCode }) {
       try {
           const response = await axios.post(`/api/games/${gameId}/${round + 1}/rounds`);
           setPlayers(response.data.players);
+
+          setRound(round + 1);
+
+          try {
+            // Get the reference to the game document
+            const gameDocRef = doc(db, "gameRooms", gameId);
+            
+            // Update the game document with the updated players array
+            await updateDoc(gameDocRef, {
+              round: round + 1,
+            });
+
+          } catch (err) {
+            console.error('Error setting round for game:', err);
+          }
 
           setRound(round + 1);
       } catch (error) {
@@ -124,28 +123,35 @@ export default function Game({ auth, gameId, gameCode }) {
       try {
           await axios.delete(`/api/game/${gameId}/${userName}/leave`);
 
-          // Get the reference to the game document
-          const gameDocRef = doc(db, "gameRooms", gameId);
-
           try {
+            // Get the reference to the game document
+            const gameDocRef = doc(db, "gameRooms", gameId);
+            
             // Get the current data of the game document
             const gameDocSnap = await getDoc(gameDocRef);
             if (gameDocSnap.exists()) {
               // Extract the current players array
               const currentPlayers = gameDocSnap.data().players || [];
-
+          
               // Check if the player to remove exists in the players array
               const playerIndex = currentPlayers.indexOf(userName);
               if (playerIndex !== -1) {
                 // Remove the player from the players array
                 const updatedPlayers = [...currentPlayers.slice(0, playerIndex), ...currentPlayers.slice(playerIndex + 1)];
-
+          
                 // Update the game document with the updated players array
                 await updateDoc(gameDocRef, {
                   players: updatedPlayers,
                 });
-
+          
                 console.log('Player removed from the game successfully');
+          
+                // Check if there are no more players in the game
+                if (updatedPlayers.length === 0) {
+                  // Delete the game document
+                  await deleteDoc(gameDocRef);
+                  console.log('Game document deleted as there are no more players');
+                }
               } else {
                 console.log('Player does not exist in the game');
               }
@@ -155,6 +161,7 @@ export default function Game({ auth, gameId, gameCode }) {
           } catch (err) {
             console.error('Error removing player from game:', err);
           }
+          
 
           router.visit("/game_lobby/");
 
@@ -168,22 +175,6 @@ export default function Game({ auth, gameId, gameCode }) {
   return (
     <AuthenticatedLayout user={auth.user}>
       <Head title="Spyfall" />
-      {game && game.map((game) => {
-        return (
-          <div>
-            {" "}
-            <h1>Game id: {game.id}</h1>
-
-            {game.data.players && game.data.players.map((player) => {
-              return (
-                <div>
-                  <h1>{player}</h1>
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold mb-4">Game {gameCode}</h1>
         <h2 className="text-xl font-semibold mb-4">Round: {round}</h2>
