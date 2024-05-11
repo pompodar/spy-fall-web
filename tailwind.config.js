@@ -25,6 +25,8 @@ export default {
             backgroundColor: {
                 'gradient-custom': 'linear-gradient(90deg, rgba(68, 58, 85, 1) 0%, rgba(136, 51, 81, 1) 100%)',
             },
+            width: {
+            },
         },
     },
 

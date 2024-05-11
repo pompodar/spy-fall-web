@@ -190,7 +190,7 @@ export default function Game({ auth, gameId, gameCode }) {
         <div className="max-w-4xl mx-auto flex justify-center items-center">
 
           {(admin.isAdmin && players.length > 1) &&
-            <button onClick={startNewRound} className="bg-yellowgreen-500 text-white px-4 py-2 rounded-md mr-4">
+            <button onClick={startNewRound} className="bg-brightgreen text-white px-4 py-2 rounded-md mr-4">
               <AiOutlineSend />
             </button>
           }
@@ -202,7 +202,7 @@ export default function Game({ auth, gameId, gameCode }) {
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {players.map(player => (
             <div key={player.id} className="">
-              <h2 className="text-lg text-brightyellow font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-sm text-green-500">(Admin)</span>}</h2>
+              <h2 className="text-lg text-brightyellow font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-sm text-brightgreen">(Admin)</span>}</h2>
               <p className="text-brightyellow">{isSpy(player.id, player.spy_id) ? 'Шпигунець' : player.location}</p>
             </div>
           ))}
