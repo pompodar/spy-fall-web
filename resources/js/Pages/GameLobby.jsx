@@ -105,10 +105,9 @@ export default function GameLobby({ auth }) {
   return (
     <AuthenticatedLayout
       user={auth.user}
-      header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">Spyfall</h2>}
     >
-      <div className="GameLobby bg-gray-100 p-4">
-        <Head title="Spyfall" />
+      <Head title="Spyfall" />
+      <div className="GameLobby bg-gray-100 p-4 flex flex-col justify-center items-center">
 
         <h1 className="text-3xl font-bold mb-4">Welcome to Spyfall!</h1>
         <p className="text-lg mb-8">Create a new game or join an existing game to start playing.</p>
@@ -116,18 +115,15 @@ export default function GameLobby({ auth }) {
         {/* New Game Form */}
         <div className="FormContainer mb-8">
           <form onSubmit={handleNewGameSubmit}>
-            <h2 className="text-xl font-semibold mb-2">Create a New Game</h2>
-            <button className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none" type="submit">Create New Game</button>
-            {newGameCode && <p className="text-green-500 mt-2">Game created! Game code: {newGameCode}</p>}
+            <button className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none" type="submit">Create New Game</button>
             {createGameError && <p className="text-red-500 mt-2">{createGameError}</p>}
           </form>
         </div>
 
         {/* Join Game Form */}
         <div className="FormContainer">
-          <form onSubmit={handleJoinGameSubmit}>
-            <h2 className="text-xl font-semibold mb-2">Join an Existing Game</h2>
-            <label className="block mb-2">
+          <form className="flex flex-col justify-center items-center" onSubmit={handleJoinGameSubmit}>
+            <label className="block mb-2 flex flex-col justify-center items-center">
               <span className="text-gray-700">Game Code:</span>
               <input
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none"
@@ -136,7 +132,7 @@ export default function GameLobby({ auth }) {
                 onChange={(e) => setJoinGameCode(e.target.value)}
               />
             </label>
-            <button className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none" type="submit">Join Game</button>
+            <button className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none" type="submit">Join Game</button>
           </form>
         </div>
       </div>

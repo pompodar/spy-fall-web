@@ -1,6 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, router } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
+import { AiOutlineSend } from "react-icons/ai";
+import { AiOutlinePoweroff } from "react-icons/ai";
+
 import { db } from "./config/firebase";
 import {
   collection,
@@ -175,18 +178,29 @@ export default function Game({ auth, gameId, gameCode }) {
   return (
     <AuthenticatedLayout user={auth.user}>
       <Head title="Spyfall" />
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col justify-center items-center">
         <h1 className="text-3xl font-bold mb-4">Game {gameCode}</h1>
         <h2 className="text-xl font-semibold mb-4">Round: {round}</h2>
-        {admin.isAdmin &&
-          <button onClick={startNewRound} className="bg-blue-500 text-white px-4 py-2 rounded-md mr-4">Start New Round</button>
+        {(players.length < 3) &&
+          <h2 className="text-sm italic mb-4">Waiting for players</h2>        
         }
-        <button onClick={leaveGame} className="bg-red-500 text-white px-4 py-2 rounded-md">Leave Game</button>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="max-w-4xl mx-auto flex justify-center items-center">
+
+          {(admin.isAdmin && players.length > 1) &&
+            <button onClick={startNewRound} className="bg-green-500 text-white px-4 py-2 rounded-md mr-4">
+              <AiOutlineSend />
+            </button>
+          }
+          <button onClick={leaveGame} className="bg-red-500 text-white px-4 py-2 rounded-md">
+            <AiOutlinePoweroff />
+          </button>
+
+        </div>
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {players.map(player => (
             <div key={player.id} className="bg-gray-100 p-4 rounded-md">
-              <h2 className="text-lg font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-blue-500">(Admin)</span>}</h2>
-              <p className="text-gray-700">{isSpy(player.id, player.spy_id) ? 'Spy' : player.location}</p>
+              <h2 className="text-lg font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-sm text-green-500">(Admin)</span>}</h2>
+              <p className="text-gray-700">{isSpy(player.id, player.spy_id) ? 'Шпигунець' : player.location}</p>
             </div>
           ))}
         </div>
