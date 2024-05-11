@@ -3,7 +3,6 @@ import { Head, router } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import { AiOutlineSend } from "react-icons/ai";
 import { AiOutlinePoweroff } from "react-icons/ai";
-
 import { db } from "./config/firebase";
 import {
   collection,
@@ -27,6 +26,8 @@ export default function Game({ auth, gameId, gameCode }) {
   const [round, setRound] = useState(0);
 
   const [game, setGame] = useState([]);
+
+  const baseUrl = window.location.origin;
 
   const userName = auth.user.name;
 
@@ -178,16 +179,18 @@ export default function Game({ auth, gameId, gameCode }) {
   return (
     <AuthenticatedLayout user={auth.user}>
       <Head title="Spyfall" />
-      <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col justify-center items-center">
-        <h1 className="text-3xl font-bold mb-4">Game {gameCode}</h1>
-        <h2 className="text-xl font-semibold mb-4">Round: {round}</h2>
+      <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col justify-center items-center bg-background">
+        <h1 className="text-3xl text-brightyellow font-bold mb-4">Game {gameCode}</h1>
+        <img className="w-48 rounded-full" src={`${baseUrl}/android-chrome-512x512.png`} alt="Logo" />
+
+        <h2 className="text-xl text-brightyellow font-semibold mb-4">Round: {round}</h2>
         {(players.length < 3) &&
-          <h2 className="text-sm italic mb-4">Waiting for players</h2>        
+          <h2 className="text-sm text-brightyellow italic mb-4">Waiting for players</h2>        
         }
         <div className="max-w-4xl mx-auto flex justify-center items-center">
 
           {(admin.isAdmin && players.length > 1) &&
-            <button onClick={startNewRound} className="bg-green-500 text-white px-4 py-2 rounded-md mr-4">
+            <button onClick={startNewRound} className="bg-yellowgreen-500 text-white px-4 py-2 rounded-md mr-4">
               <AiOutlineSend />
             </button>
           }
@@ -198,9 +201,9 @@ export default function Game({ auth, gameId, gameCode }) {
         </div>
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {players.map(player => (
-            <div key={player.id} className="bg-gray-100 p-4 rounded-md">
-              <h2 className="text-lg font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-sm text-green-500">(Admin)</span>}</h2>
-              <p className="text-gray-700">{isSpy(player.id, player.spy_id) ? 'Шпигунець' : player.location}</p>
+            <div key={player.id} className="">
+              <h2 className="text-lg text-brightyellow font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-sm text-green-500">(Admin)</span>}</h2>
+              <p className="text-brightyellow">{isSpy(player.id, player.spy_id) ? 'Шпигунець' : player.location}</p>
             </div>
           ))}
         </div>

@@ -104,35 +104,36 @@ export default function GameLobby({ auth }) {
 
   return (
     <AuthenticatedLayout
+    className="GameLobby bg-gradient-to-r from-brightpurple to-darkpurple p-4 flex flex-col justify-center items-center"
       user={auth.user}
     >
       <Head title="Spyfall" />
-      <div className="GameLobby bg-gray-100 p-4 flex flex-col justify-center items-center">
+      <div className="GameLobby bg-gradient-to-r from-brightpurple to-darkpurple p-4 flex flex-col justify-center items-center">
 
-        <h1 className="text-3xl font-bold mb-4">Welcome to Spyfall!</h1>
-        <p className="text-lg mb-8">Create a new game or join an existing game to start playing.</p>
+        <h1 className="text-3xl text-brightyellow font-bold mb-4">Welcome to Spyfall!</h1>
+        <img className="w-48 rounded-full" src="android-chrome-512x512.png" alt="Logo" />
 
         {/* New Game Form */}
         <div className="FormContainer mb-8">
           <form onSubmit={handleNewGameSubmit}>
-            <button className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none" type="submit">Create New Game</button>
+            <button className="bg-brightpurple text-brightyellow py-2 px-4 mt-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Create New Game</button>
             {createGameError && <p className="text-red-500 mt-2">{createGameError}</p>}
           </form>
         </div>
 
         {/* Join Game Form */}
-        <div className="FormContainer">
+        <div className="FormContainer mb-8">
           <form className="flex flex-col justify-center items-center" onSubmit={handleJoinGameSubmit}>
             <label className="block mb-2 flex flex-col justify-center items-center">
-              <span className="text-gray-700">Game Code:</span>
+              <span className="text-brightyellow">Game Code:</span>
               <input
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none"
+                className="w-full mt-2 outline-brightyellow p-2 border border-brightyellow text-brightyellow rounded-md focus:outline-none bg-gradient-to-r from-brightpurple to-darkpurple"
                 type="text"
                 value={joinGameCode}
                 onChange={(e) => setJoinGameCode(e.target.value)}
               />
             </label>
-            <button className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600 focus:outline-none" type="submit">Join Game</button>
+            <button className="bg-brightpurple text-brightyellow py-2 px-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Join Game</button>
           </form>
         </div>
       </div>
