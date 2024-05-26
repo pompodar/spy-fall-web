@@ -14,6 +14,19 @@ Route::get('/', function () {
     ]);
 });
 
+Route::get('/test', function () {
+    return Inertia::render('Test', [
+        'canLogin' => Route::has('login'),
+        'canRegister' => Route::has('register'),
+        'laravelVersion' => Application::VERSION,
+        'phpVersion' => PHP_VERSION,
+    ]);
+});
+
+Route::post('/hm', function () {
+    return 4;
+});
+
 Route::get('/game/{gameId}/{gameCode}', function ($gameId, $gameCode) {
     return Inertia::render('Game', [
         'canLogin' => Route::has('login'),
