@@ -4,7 +4,7 @@ import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
 import { auth as firebaseAuth } from '../Pages/config/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, getAuth, signOut } from 'firebase/auth';
 import React, { useState, useEffect } from 'react';
 
 export default function Authenticated({ user, header, children }) {
@@ -22,6 +22,15 @@ export default function Authenticated({ user, header, children }) {
         // Cleanup subscription on unmount
         return () => unsubscribe();
     }, []);
+
+    const handleLogout = () => {
+        const auth = getAuth();
+        signOut(auth).then(() => {
+        // Sign-out successful.
+        }).catch((error) => {
+        // An error happened.
+        });
+    };
 
     return (
         <div className="max-w-screen-xl mx-auto bg-gradient-to-r from-brightpurple shadow-lg">
@@ -71,9 +80,20 @@ export default function Authenticated({ user, header, children }) {
 
                                     <Dropdown.Content>
                                         <Dropdown.Link className="bg-brightpurple text-brightyellow" href={route('profile.edit')}>Profile</Dropdown.Link>
-                                        <Dropdown.Link className="bg-brightpurple text-brightyellow" href={route('logout')} method="post" as="button">
-                                            Log Out
-                                        </Dropdown.Link>
+                                        { userGoogle && (
+                                            <Dropdown.Link className="bg-brightpurple text-brightyellow" onClick={() => handleLogout(userGoogle)}>
+                                                Log Out
+                                            </Dropdown.Link>
+                                            ) 
+                                        }
+
+                                        {!userGoogle && (
+                                            <Dropdown.Link className="bg-brightpurple text-brightyellow" href={route('logout')} method="post" as="button">
+                                                Log Out
+                                            </Dropdown.Link>
+                                            )
+                                        }
+                
                                     </Dropdown.Content>
                                 </Dropdown>
                             </div>
