@@ -1,8 +1,10 @@
 // Import the functions you need from the SDKs you need
+import { Head, router } from '@inertiajs/react';
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "@firebase/firestore";
-import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "firebase/auth";
 import axios from 'axios';
+import { useEffect } from 'react';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDEXWXgE_Rx44YPhlnH7fIHMfHwmQsRQhI",
@@ -30,13 +32,18 @@ export const signInWithGoogle = () => {
       localStorage.setItem("name", name);
       localStorage.setItem("email", email);
       localStorage.setItem("profilePic", profilePic);
-      console.log(name);
+      console.log(email);
 
       axios
-      .post('https://auth.blobsandtrees.online/register', {'name': name, 'email': email, 'password': 'password'})
-      .then(() => mutate())
+      .post('https://auth.blobsandtrees.online/login-with-google', {'email': email, 'name': name,})
+      .then((data) => {
+        console.log(data);
+        router.visit("/", {
+          user: data.user,
+        });
+      })
       .catch((error) => {
-        if (error.response.status !== 422) throw error;
+        console.log(error);
         // Handle error response
       });
     })

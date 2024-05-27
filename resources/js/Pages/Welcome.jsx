@@ -4,6 +4,9 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, router } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import { db } from "./config/firebase";
+import { AuthProvider, useAuth } from './context';
+import { auth as firebaseAuth } from './config/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import {
   collection,
   query, 
@@ -19,19 +22,32 @@ import {
 } from "firebase/firestore";
 import axios from 'axios';
 
-export default function Welcome({ auth, laravelVersion, phpVersion }) {
-    const handleImageError = () => {
-        document.getElementById('screenshot-container')?.classList.add('!hidden');
-        document.getElementById('docs-card')?.classList.add('!row-span-1');
-        document.getElementById('docs-card-content')?.classList.add('!flex-row');
-        document.getElementById('background')?.classList.add('!hidden');
-    };
+export default function Welcome({ auth }) {
+  const [user, setUser] = useState(null);
 
-    const [newGameCode, setNewGameCode] = useState('');
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+  
+  const handleImageError = () => {
+      document.getElementById('screenshot-container')?.classList.add('!hidden');
+      document.getElementById('docs-card')?.classList.add('!row-span-1');
+      document.getElementById('docs-card-content')?.classList.add('!flex-row');
+      document.getElementById('background')?.classList.add('!hidden');
+  };
+
+  const isAuthenticated = !!(auth?.user || user);
+
+  const [newGameCode, setNewGameCode] = useState('');
   const [joinGameCode, setJoinGameCode] = useState('');
   const [createGameError, setCreateGameError] = useState(null);
 
-  const userName = auth?.user?.name || "";
+  const userName = auth?.user?.name || user?.name || "";
 
   const handleNewGameSubmit = async (e) => {
     e.preventDefault();
@@ -112,19 +128,19 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
   };
 
     return (
-        <>
+        <AuthProvider>
             <Head title="Welcome" />
             <div className="bg-transparent text-black/50 dark:bg-black dark:text-white/50">
                 <div className="relative min-h-screen flex flex-col selection:bg-[#FF2D20] selection:text-white">
                     <div className="relative mx-auto w-full max-w-2xl">
 
-                        {auth.user ? (
-                            <AuthenticatedLayout user={auth.user}>
-                            <Head title="Spyfall" />
+                        {(isAuthenticated) ? (
+                            <AuthenticatedLayout user={auth.user || user}>
+                            <Head title="Spy" />
 
                               <div className="GameLobby bg-gradient-to-r from-brightpurple to-darkpurple p-4 flex flex-col justify-center items-center">
 
-                                <h1 className="text-3xl text-brightyellow font-bold mb-4">Welcome to Spyfall!</h1>
+                                <h1 className="text-3xl text-brightyellow font-bold mb-4">Welcome to Spy!</h1>
                                 <img className="w-48 rounded-full" src="android-chrome-512x512.png" alt="Logo" />
 
                                 {/* New Game Form */}
@@ -154,8 +170,8 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                             </AuthenticatedLayout>
                         ) : (
                             <GuestLayout>
-                            <Head title="Spyfall" />
-                                <h1 className="text-3xl text-center bg-transparent text-brightyellow font-bold mb-4">Welcome to Spyfall!</h1>
+                            <Head title="Spy" />
+                                <h1 className="text-3xl text-center bg-transparent text-brightyellow font-bold mb-4">Welcome to Spy!</h1>
                                 <img className="w-48 text-center rounded-full" src="android-chrome-512x512.png" alt="Logo" />
 
                                 <p className="mt-4 text-brightyellow w-full bg-transparent ">
@@ -247,6 +263,6 @@ export default function Welcome({ auth, laravelVersion, phpVersion }) {
                     </div>
                 </div>
             </div>
-        </>
+        </AuthProvider>
     );
 }

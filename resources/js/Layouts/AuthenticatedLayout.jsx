@@ -1,12 +1,27 @@
-import { useState } from 'react';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import Dropdown from '@/Components/Dropdown';
 import NavLink from '@/Components/NavLink';
 import ResponsiveNavLink from '@/Components/ResponsiveNavLink';
 import { Link } from '@inertiajs/react';
+import { auth as firebaseAuth } from '../Pages/config/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import React, { useState, useEffect } from 'react';
 
 export default function Authenticated({ user, header, children }) {
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+
+    const [userGoogle, setGoogleUser] = useState(null);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
+        setGoogleUser(currentUser);
+
+        console.log(currentUser);
+        });
+
+        // Cleanup subscription on unmount
+        return () => unsubscribe();
+    }, []);
 
     return (
         <div className="max-w-screen-xl mx-auto bg-gradient-to-r from-brightpurple shadow-lg">
@@ -21,7 +36,7 @@ export default function Authenticated({ user, header, children }) {
                             </div>
 
                             <div className="text-brightyellow hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                                <NavLink className="text-brightyellow" href={route('game_lobby')} active={route().current('game_lobby')}>
+                                <NavLink className="text-brightyellow" href={route('welcome')} active={route().current('welcome')}>
                                     Game Lobby
                                 </NavLink>
                             </div>
@@ -36,7 +51,7 @@ export default function Authenticated({ user, header, children }) {
                                                 type="button"
                                                 className="bg-transparent inline-flex items-center px-3 py-2 border border-transparent text-sm text-brightyellow leading-4 font-medium rounded-md hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
                                             >
-                                                {user.name}
+                                                {user.name || userGoogle?.displayName}
 
                                                 <svg
                                                     className="ms-2 -me-0.5 h-4 w-4"
@@ -92,7 +107,7 @@ export default function Authenticated({ user, header, children }) {
 
                 <div className={(showingNavigationDropdown ? 'block' : 'hidden') + ' sm:hidden'}>
                     <div className="pt-2 pb-3 space-y-1">
-                        <ResponsiveNavLink href={route('game_lobby')} active={route().current('game_lobby')}>
+                        <ResponsiveNavLink href={route('welcome')} active={route().current('welcome')}>
                             Game Lobby
                         </ResponsiveNavLink>
                     </div>

@@ -26,6 +26,6 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('game_lobbyrd', absolute: false));
+        $response->assertRedirect(route('welcome', absolute: false));
     }
 }
