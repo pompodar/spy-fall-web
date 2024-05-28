@@ -245,8 +245,8 @@ export default function Game({ auth, gameId, gameCode }) {
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {players.map(player => (
             <div key={player.id} className="">
-              <h2 className="text-lg text-brightyellow font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-sm text-brightgreen">(Admin)</span>}</h2>
-              <p className="text-red-500">{isSpy(player.id, player.spy_id) ? 'Шпигунець' : player.location}</p>
+              <h2 className="text-lg text-center text-brightyellow font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-sm text-brightgreen">(Admin)</span>}</h2>
+              <p className="text-center text-red-500">{isSpy(player.id, player.spy_id) ? 'Шпигунець' : player.location}</p>
             </div>
           ))}
         </div>
