@@ -60,7 +60,7 @@ class RoundController extends Controller
             $current_user_email = $request->user()?->email ?? $userEmail;
             
             // Generate a set of locations for the round (excluding the spy location)
-            $locations = $this->generateRoundLocations();
+            $location = $this->generateRoundLocation();
 
             $game = GameRoom::where('id', $gameId)->first();
 
@@ -85,7 +85,6 @@ class RoundController extends Controller
             // Assign a regular location to each player for the round
             foreach ($players as $player) {
                 if ($player->id !== $spy->id) {
-                    $location = array_shift($locations); // Get the next location from the list
                     $player->update(['location' => $location]);
                 }
             }
@@ -111,15 +110,15 @@ class RoundController extends Controller
         }
     }
 
-    private function generateRoundLocations()
+    private function generateRoundLocation()
     {
         // Define the list of regular locations (excluding the spy location)
         $locations = ['Казино', 'Космічна станція', 'Цирк', 'Піратський корабель', 'Пляж', 'Кінотеатр', 'Кімната'];
 
-        // Shuffle the list of locations to randomize them
-        shuffle($locations);
+        $randomLocationKey = array_rand($locations);
+        $randomLocation = $locations[$randomLocationKey];
 
-        return $locations;
+        return $randomLocation;
     }
 
     public function getGameRound($gameId)
