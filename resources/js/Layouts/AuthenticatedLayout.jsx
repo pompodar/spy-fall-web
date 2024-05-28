@@ -79,7 +79,7 @@ export default function Authenticated({ user, header, children }) {
                                     </Dropdown.Trigger>
 
                                     <Dropdown.Content>
-                                        <Dropdown.Link className="bg-brightpurple text-brightyellow" href={route('profile.edit')}>Profile</Dropdown.Link>
+                                        {/* <Dropdown.Link className="bg-brightpurple text-brightyellow" href={route('profile.edit')}>Profile</Dropdown.Link> */}
                                         { userGoogle && (
                                             <Dropdown.Link className="bg-brightpurple text-brightyellow" onClick={() => handleLogout(userGoogle)}>
                                                 Log Out
@@ -139,7 +139,7 @@ export default function Authenticated({ user, header, children }) {
                         </div>
 
                         <div className="mt-3 space-y-1">
-                            <ResponsiveNavLink href={route('profile.edit')}>Profile</ResponsiveNavLink>
+                            {/* <ResponsiveNavLink href={route('profile.edit')}>Profile</ResponsiveNavLink> */}
                             <ResponsiveNavLink method="post" href={route('logout')} as="button">
                                 Log Out
                             </ResponsiveNavLink>

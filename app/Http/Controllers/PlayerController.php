@@ -18,6 +18,7 @@ class PlayerController extends Controller
         $validatedData = $request->validate([
             'game_room_id' => 'required',
             'email' => 'required',
+            'name' => 'required',
             'role' => 'required',
             'score' => 'nullable|integer',
         ]);
@@ -73,7 +74,7 @@ class PlayerController extends Controller
         })->get();
 
         $players->transform(function ($player) use ($current_user_email) {
-            if ($player->name === $current_user_email) {
+            if ($player->email === $current_user_email) {
                 $player->makeVisible('location');
             } else {
                 $player->makeHidden('location');
@@ -89,7 +90,7 @@ class PlayerController extends Controller
     public function getAdmin(Request $request, $userEmail)
     {
         // Retrieve the player based on the provided username
-        $player = Player::where('name', $userEmail)->first();
+        $player = Player::where('email', $userEmail)->first();
     
         // If the player doesn't exist, return an error response
         if (!$player) {

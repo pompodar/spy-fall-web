@@ -108,7 +108,6 @@ export default function Game({ auth, gameId, gameCode }) {
 
     // Fetch players for the current game
   const fetchPlayers = async () => {
-    console.log(userEmail);
       try {
           const response = await axios.get(`/api/game/${gameId}/${user?.email}/players`);
 
@@ -144,8 +143,10 @@ export default function Game({ auth, gameId, gameCode }) {
   }, [round]);
 
   const startNewRound = async () => {
+      userEmail = auth?.user?.email || user?.email || "";
+
       try {
-          const response = await axios.post(`/api/games/${gameId}/${user.email}/${round + 1}/rounds`);
+          const response = await axios.post(`/api/games/${gameId}/${userEmail}/${round + 1}/rounds`);
           setPlayers(response.data.players);
 
           console.log(response);
@@ -233,7 +234,7 @@ export default function Game({ auth, gameId, gameCode }) {
         <img className="w-48 rounded-full" src={`${baseUrl}/android-chrome-512x512.png`} alt="Logo" />
 
         <h2 className="text-xl text-brightyellow font-semibold mb-4">Round: {round}</h2>
-        {(players.length < 2) &&
+        {(players.length < 3) &&
           <h2 className="text-sm text-brightyellow italic mb-4">Waiting for players</h2>        
         }
         <div className="max-w-4xl mx-auto flex justify-center items-center">
@@ -252,7 +253,7 @@ export default function Game({ auth, gameId, gameCode }) {
           {players.map(player => (
             <div key={player.id} className="">
               <h2 className="text-lg text-brightyellow font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-sm text-brightgreen">(Admin)</span>}</h2>
-              <p className="text-brightyellow">{isSpy(player.id, player.spy_id) ? 'Шпигунець' : player.location}</p>
+              <p className="text-red-500">{isSpy(player.id, player.spy_id) ? 'Шпигунець' : player.location}</p>
             </div>
           ))}
         </div>

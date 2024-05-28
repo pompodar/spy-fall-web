@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\GameRoom;
 use App\Models\Player;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Auth;
@@ -52,13 +53,15 @@ class GameRoomController extends Controller
     public function create($user_email, Request $request)
     {
         // Check if the user is already associated with a game
-        $existingPlayer = Player::where('name', $user_email)->first();
+        $existingPlayer = Player::where('email', $user_email)->first();
 
         if ($existingPlayer) {
             $gameRoomCode = $existingPlayer->gameRoom->code;
             
             return response()->json(['error' => 'You are already in a game', 'game_code' => $gameRoomCode], 403);
         }
+
+        $user = User::where('email', $user_email)->first();
 
         // Generate a random game code (you can customize this as needed)
         $gameCode = strtoupper(Str::random(6));
@@ -79,7 +82,8 @@ class GameRoomController extends Controller
         // Create a new player for the game
         $player = Player::create([
             'game_room_id' => $game->id,
-            'name' => $user_email,
+            'email' => $user_email,
+            'name' => $user->name,
             'role' => 'administrator',
         ]);
 
@@ -102,13 +106,16 @@ class GameRoomController extends Controller
         }
 
         // Check if the user is already associated with a game
-        $existingPlayer = Player::where('name', $request->input('userEmail'))->first();
+        $existingPlayer = Player::where('email', $request->input('userEmail'))->first();
+
+        $user = User::where('email', $request->input('userEmail'))->first();
         
         if (!$existingPlayer) {
             // Create a new player for the game
             $player = Player::create([
                 'game_room_id' => $game->id,
-                'name' => $request->input('userEmail'),
+                'email' => $request->input('userEmail'),
+                'name' => $user->name,
                 'role' => 'guest',
             ]);
         }
@@ -120,7 +127,7 @@ class GameRoomController extends Controller
     public function leaveGame($gameId, $userEmail)
     {
 
-        $player = Player::where('game_room_id', $gameId)->where('name', $userEmail)->first();
+        $player = Player::where('game_room_id', $gameId)->where('email', $userEmail)->first();
         
         if ($player) {
             $player->delete();

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Player extends Model
 {
-    protected $fillable = ['game_room_id', 'name', 'role', 'score', 'location'];
+    protected $fillable = ['game_room_id', 'name', 'email', 'role', 'score', 'location'];
     protected $hidden = ['location'];
 
     public function gameRoom()
