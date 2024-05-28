@@ -23,14 +23,14 @@ Route::post('/create-game/{user_name}', [GameRoomController::class, 'create']);
 
 Route::post('/join-game', [GameRoomController::class, 'join']);
 
-Route::get('/game/{gameId}/players', [PlayerController::class, 'getPlayersByGameCode'])->middleware(['web']);
+Route::get('/game/{gameId}/{userEmail}/players', [PlayerController::class, 'getPlayersByGameCode'])->middleware(['web']);
 
-Route::get('/game/{userName}/admin', [PlayerController::class, 'getAdmin'])->middleware(['web']);
+Route::get('/game/{userEmail}/admin', [PlayerController::class, 'getAdmin'])->middleware(['web']);
 
-Route::delete('/game/{gameId}/{userName}/leave', [GameRoomController::class, 'leaveGame']);
+Route::delete('/game/{gameId}/{userEmail}/leave', [GameRoomController::class, 'leaveGame']);
 
-Route::post('/games/{gameId}/{round}/rounds', [RoundController::class, 'startNewRound'])->middleware(['web']);
+Route::post('/games/{gameId}/{userEmail}/{round}/rounds', [RoundController::class, 'startNewRound'])->middleware(['web']);
 
-Route::post('/round/{gameId}', [RoundController::class, 'getGameRound'])->middleware(['web']);
+Route::post('/round/{gameId}/{userEmail}', [RoundController::class, 'getGameRound'])->middleware(['web']);
 
 

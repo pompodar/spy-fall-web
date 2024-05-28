@@ -17,7 +17,7 @@ class PlayerController extends Controller
     {
         $validatedData = $request->validate([
             'game_room_id' => 'required',
-            'name' => 'required',
+            'email' => 'required',
             'role' => 'required',
             'score' => 'nullable|integer',
         ]);
@@ -34,7 +34,7 @@ class PlayerController extends Controller
     {
         $validatedData = $request->validate([
             'game_room_id' => 'required',
-            'name' => 'required',
+            'email' => 'required',
             'role' => 'required',
             'score' => 'nullable|integer',
         ]);
@@ -53,9 +53,9 @@ class PlayerController extends Controller
         return response()->json(['message' => 'Player deleted successfully']);
     }
 
-    public function getPlayersByGameCode(Request $request, $gameId)
+    public function getPlayersByGameCode(Request $request, $gameId, $userEmail)
     {
-        $current_user = $request->user();
+        $current_user_email = $request->user()?->email ?? $userEmail;
 
         $gameRoom = GameRoom::where('id', $gameId)->first();
 
@@ -72,8 +72,8 @@ class PlayerController extends Controller
             $query->where('game_room_id', $gameId);
         })->get();
 
-        $players->transform(function ($player) use ($current_user) {
-            if ($player->name === $current_user->name) {
+        $players->transform(function ($player) use ($current_user_email) {
+            if ($player->email === $current_user_email) {
                 $player->makeVisible('location');
             } else {
                 $player->makeHidden('location');
@@ -86,10 +86,10 @@ class PlayerController extends Controller
 
     }
 
-    public function getAdmin(Request $request, $userName)
+    public function getAdmin(Request $request, $userEmail)
     {
         // Retrieve the player based on the provided username
-        $player = Player::where('name', $userName)->first();
+        $player = Player::where('name', $userEmail)->first();
     
         // If the player doesn't exist, return an error response
         if (!$player) {

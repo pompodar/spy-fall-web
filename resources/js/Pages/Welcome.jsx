@@ -33,7 +33,7 @@ export default function Welcome({ auth }) {
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
-  
+
   const handleImageError = () => {
       document.getElementById('screenshot-container')?.classList.add('!hidden');
       document.getElementById('docs-card')?.classList.add('!row-span-1');
@@ -47,13 +47,13 @@ export default function Welcome({ auth }) {
   const [joinGameCode, setJoinGameCode] = useState('');
   const [createGameError, setCreateGameError] = useState(null);
 
-  const userName = auth?.user?.name || user?.name || "";
+  const userEmail = auth?.user?.email || user?.email || "";
 
   const handleNewGameSubmit = async (e) => {
     e.preventDefault();
     try {
       // Send request to backend to create a new game
-      const response = await axios.post(`/api/create-game/${userName}`);
+      const response = await axios.post(`/api/create-game/${userEmail}`);
       // Set the new game code
       console.log(response);
       setNewGameCode(response.data.gameId);
@@ -64,7 +64,7 @@ export default function Welcome({ auth }) {
       try {
         // Add the document to the 'gameRooms' collection with the custom ID
         await setDoc(doc(db, "gameRooms", gameId), {
-          players: [userName],
+          players: [userEmail],
         });
         console.log('Game added to Firestore successfully');
       } catch (err) {
@@ -84,7 +84,7 @@ export default function Welcome({ auth }) {
     e.preventDefault();
     try {
       // Send request to backend to join the game
-      const response = await axios.post('/api/join-game', { gameCode: joinGameCode, userName: userName });
+      const response = await axios.post('/api/join-game', { gameCode: joinGameCode, userEmail: userEmail });
       console.log('Join game response:', response.data);
       // Reset the input field after successful submission
       setJoinGameCode('');
@@ -100,9 +100,9 @@ export default function Welcome({ auth }) {
           const currentPlayers = gameDocSnap.data().players || [];
       
           // Check if the user is already in the players array
-          if (!currentPlayers.includes(userName)) {
+          if (!currentPlayers.includes(userEmail)) {
             // Add the new user to the players array
-            const updatedPlayers = [...currentPlayers, userName];
+            const updatedPlayers = [...currentPlayers, userEmail];
       
             // Update the game document with the new players array
             await updateDoc(gameDocRef, {

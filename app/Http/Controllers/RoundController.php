@@ -54,9 +54,9 @@ class RoundController extends Controller
         return response()->json(['message' => 'Round deleted successfully']);
     }
 
-    public function startNewRound(Request $request, $gameId, $round)
+    public function startNewRound(Request $request, $gameId, $userEmail, $round)
     {        
-        $current_user = $request->user();
+        $current_user_email = $request->user()?->email ?? $userEmail;
         
         // Generate a set of locations for the round (excluding the spy location)
         $locations = $this->generateRoundLocations();
@@ -81,8 +81,8 @@ class RoundController extends Controller
             }
         }
 
-        $players->transform(function ($player) use ($current_user) {
-            if ($player->name === $current_user->name) {
+        $players->transform(function ($player) use ($current_user_email) {
+            if ($player->email === $current_user_email) {
                 $player->makeVisible('location');
             } else {
                 $player->makeHidden('location');

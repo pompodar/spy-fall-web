@@ -23,7 +23,8 @@ Route::get('/game/{gameId}/{gameCode}', function ($gameId, $gameCode) {
         'gameId' => $gameId,
         'gameCode' => $gameCode,
     ]);
-})->middleware(['auth', 'verified'])->name('game');
+})->name('game');
+// ->middleware(['auth', 'verified']);
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

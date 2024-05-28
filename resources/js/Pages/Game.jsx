@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { AiOutlineSend } from "react-icons/ai";
 import { AiOutlinePoweroff } from "react-icons/ai";
 import { db } from "./config/firebase";
+import { auth as firebaseAuth } from './config/firebase';
+import { onAuthStateChanged, getAuth } from 'firebase/auth';
 import {
   collection,
   query, 
@@ -29,12 +31,24 @@ export default function Game({ auth, gameId, gameCode }) {
 
   const baseUrl = window.location.origin;
 
-  const userName = auth.user.name;
+  const [user, setUser] = useState(null);
 
-  // Fetch players for the current game
+  let userEmail = "";
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
+      setUser(currentUser);
+
+    userEmail = auth?.user?.email || currentUser?.email || "";
+
+    console.log(userEmail);
+
+
+    // Fetch players for the current game
   const fetchPlayers = async () => {
+    console.log(userEmail);
       try {
-          const response = await axios.get(`/api/game/${gameId}/players`);
+          const response = await axios.get(`/api/game/${gameId}/${userEmail}/players`);
 
           setPlayers(response.data.players);
       } catch (error) {
@@ -45,7 +59,7 @@ export default function Game({ auth, gameId, gameCode }) {
   // Fetch round for the current game
   const fetchRound = async () => {
       try {
-          const response = await axios.post(`/api/round/${gameId}`);
+          const response = await axios.post(`/api/round/${gameId}/${userEmail}`);
 
           if (!response.data.round) {
             //setRound(0);
@@ -57,8 +71,7 @@ export default function Game({ auth, gameId, gameCode }) {
       }
   };
 
-  useEffect(() => {
-    const q = query(collection(db, 'gameRooms'))
+  const q = query(collection(db, 'gameRooms'))
     onSnapshot(q, (querySnapshot) => {
       // setGame(querySnapshot.docs.map(doc => ({
       //   id: doc.id,
@@ -71,12 +84,20 @@ export default function Game({ auth, gameId, gameCode }) {
 
     })
 
-  },[])
+    fetchPlayers();
+
+    fetchRound();
+
+  });
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
 
   useEffect(() => {
       const fetchAdmin = async () => {
         try {
-            const response = await axios.get(`/api/game/${userName}/admin`);
+            const response = await axios.get(`/api/game/${userEmail}/admin`);
 
             setAdmin(response.data);
         } catch (error) {
@@ -84,22 +105,22 @@ export default function Game({ auth, gameId, gameCode }) {
         }
     };
 
-    fetchAdmin();
+    //fetchAdmin();
 
-    fetchPlayers();
+    //fetchPlayers();
 
   }, [round]);
 
   useEffect(() => {
     
-    fetchRound();
+    //fetchRound();
 
 }, [round]);
 
 
   const startNewRound = async () => {
       try {
-          const response = await axios.post(`/api/games/${gameId}/${round + 1}/rounds`);
+          const response = await axios.post(`/api/games/${gameId}/${userEmail}/${round + 1}/rounds`);
           setPlayers(response.data.players);
 
           setRound(round + 1);
@@ -125,7 +146,7 @@ export default function Game({ auth, gameId, gameCode }) {
 
   const leaveGame = async () => {
       try {
-          await axios.delete(`/api/game/${gameId}/${userName}/leave`);
+          await axios.delete(`/api/game/${gameId}/${userEmail}/leave`);
 
           try {
             // Get the reference to the game document
@@ -138,7 +159,7 @@ export default function Game({ auth, gameId, gameCode }) {
               const currentPlayers = gameDocSnap.data().players || [];
           
               // Check if the player to remove exists in the players array
-              const playerIndex = currentPlayers.indexOf(userName);
+              const playerIndex = currentPlayers.indexOf(userEmail);
               if (playerIndex !== -1) {
                 // Remove the player from the players array
                 const updatedPlayers = [...currentPlayers.slice(0, playerIndex), ...currentPlayers.slice(playerIndex + 1)];
@@ -177,7 +198,8 @@ export default function Game({ auth, gameId, gameCode }) {
   const isSpy = (playerId, spyId) => playerId === spyId;
 
   return (
-    <AuthenticatedLayout user={auth.user}>
+    <AuthenticatedLayout user={auth?.user || user?.displayName}>
+      
       <Head title="Spy" />
       <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col justify-center items-center bg-background">
         <h1 className="text-3xl text-brightyellow font-bold mb-4">Game {gameCode}</h1>

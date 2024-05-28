@@ -49,10 +49,11 @@ class GameRoomController extends Controller
         return response()->json(['message' => 'Game Room deleted successfully']);
     }
 
-    public function create($user_name, Request $request)
+    public function create($user_email, Request $request)
     {
         // Check if the user is already associated with a game
-        $existingPlayer = Player::where('name', $user_name)->first();
+        $existingPlayer = Player::where('name', $user_email)->first();
+
         if ($existingPlayer) {
             $gameRoomCode = $existingPlayer->gameRoom->code;
             
@@ -78,7 +79,7 @@ class GameRoomController extends Controller
         // Create a new player for the game
         $player = Player::create([
             'game_room_id' => $game->id,
-            'name' => $user_name,
+            'name' => $user_email,
             'role' => 'administrator',
         ]);
 
@@ -90,7 +91,7 @@ class GameRoomController extends Controller
     {
         $request->validate([
             'gameCode' => 'required|exists:game_rooms,code',
-            'userName' => 'required'
+            'userEmail' => 'required'
         ]);
 
         $game = GameRoom::where('code', $request->input('gameCode'))->first();
@@ -101,12 +102,13 @@ class GameRoomController extends Controller
         }
 
         // Check if the user is already associated with a game
-        $existingPlayer = Player::where('name', $request->input('userName'))->first();
+        $existingPlayer = Player::where('name', $request->input('userEmail'))->first();
+        
         if (!$existingPlayer) {
             // Create a new player for the game
             $player = Player::create([
                 'game_room_id' => $game->id,
-                'name' => $request->input('userName'),
+                'name' => $request->input('userEmail'),
                 'role' => 'guest',
             ]);
         }
@@ -115,10 +117,10 @@ class GameRoomController extends Controller
         return response()->json(['gameId' => $game->id, 'gameCode' => $game->code], 201);
     }
 
-    public function leaveGame($gameId, $userName)
+    public function leaveGame($gameId, $userEmail)
     {
 
-        $player = Player::where('game_room_id', $gameId)->where('name', $userName)->first();
+        $player = Player::where('game_room_id', $gameId)->where('name', $userEmail)->first();
         
         if ($player) {
             $player->delete();
