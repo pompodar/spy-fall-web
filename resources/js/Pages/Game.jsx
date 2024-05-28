@@ -35,37 +35,45 @@ export default function Game({ auth, gameId, gameCode }) {
 
   let userEmail = "";
 
-  useEffect(() => {
-    const q = query(collection(db, 'gameRooms'))
-    onSnapshot(q, (querySnapshot) => {
-    })
-  })
-
   useEffect(() => {    
     const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
       setUser(currentUser);
 
-        // Fetch players for the current game
-  const fetchPlayers = async () => {
-    console.log(userEmail);
-      try {
-          const response = await axios.get(`/api/game/${gameId}/${userEmail}/players`);
+      // Fetch players for the current game
+      const fetchPlayers = async () => {
+        console.log(userEmail);
+          try {
+              const response = await axios.get(`/api/game/${gameId}/${userEmail}/players`);
 
-          console.log(response);
-          setPlayers(response.data.players);
-      } catch (error) {
-          console.error('Error fetching players:', error);
-      }
-  };
+              console.log(response);
+              setPlayers(response.data.players);
+          } catch (error) {
+              console.error('Error fetching players:', error);
+          }
+      };
 
-        const q = query(collection(db, 'gameRooms'))
-        onSnapshot(q, (querySnapshot) => {
-          fetchPlayers();
-        })
+      // Fetch round for the current game
+      const fetchRound = async () => {
+        try {
+            const response = await axios.post(`/api/round/${gameId}/${userEmail}`);
+
+            if (!response.data.round) {
+              //setRound(0);
+            } else {
+              setRound(response.data.round);
+            }
+        } catch (error) {
+            console.error('Error fetching players:', error);
+        }
+    };
+
+      const q = query(collection(db, 'gameRooms'))
+      onSnapshot(q, (querySnapshot) => {
+        fetchPlayers();
+        fetchRound();
+      })
 
     userEmail = auth?.user?.email || currentUser?.email || "";
-
-    console.log(userEmail);
 
     const fetchAdmin = async () => {
       try {
@@ -75,24 +83,9 @@ export default function Game({ auth, gameId, gameCode }) {
       } catch (error) {
           console.error('Error fetching players:', error);
       }
-  };
+    };
 
-  fetchAdmin();
-
-  // Fetch round for the current game
-  const fetchRound = async () => {
-      try {
-          const response = await axios.post(`/api/round/${gameId}/${userEmail}`);
-
-          if (!response.data.round) {
-            //setRound(0);
-          } else {
-            setRound(response.data.round);
-          }
-      } catch (error) {
-          console.error('Error fetching players:', error);
-      }
-  };
+    fetchAdmin();
 
     fetchPlayers();
 
