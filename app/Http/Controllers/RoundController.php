@@ -55,43 +55,60 @@ class RoundController extends Controller
     }
 
     public function startNewRound(Request $request, $gameId, $userEmail, $round)
-    {        
-        $current_user_email = $request->user()?->email ?? $userEmail;
-        
-        // Generate a set of locations for the round (excluding the spy location)
-        $locations = $this->generateRoundLocations();
+    {
+        try {
+            $current_user_email = $request->user()?->email ?? $userEmail;
+            
+            // Generate a set of locations for the round (excluding the spy location)
+            $locations = $this->generateRoundLocations();
 
-        $game = GameRoom::where('id', $gameId)->first();
+            $game = GameRoom::where('id', $gameId)->first();
 
-        // Update the round attribute
-        $game->update(['round' => $round]);
-        
-        // Randomly choose one player as the spy
-        $players = $game->players;
-        $spyIndex = rand(0, count($players) - 1);
-
-        $spy = $players[$spyIndex];
-        $spy->update(['location' => 'Spy']);
-        
-        // Assign a regular location to each player for the round
-        foreach ($players as $player) {
-            if ($player->id !== $spy->id) {
-                $location = array_shift($locations); // Get the next location from the list
-                $player->update(['location' => $location]);
+            if (!$game) {
+                return response()->json(['error' => 'Game not found.'], 404);
             }
+
+            // Update the round attribute
+            $game->update(['round' => $round]);
+            
+            // Randomly choose one player as the spy
+            $players = $game->players;
+
+            if (count($players) === 0) {
+                return response()->json(['error' => 'No players found in the game.'], 400);
+            }
+
+            $spyIndex = rand(0, count($players) - 1);
+            $spy = $players[$spyIndex];
+            $spy->update(['location' => 'Spy']);
+            
+            // Assign a regular location to each player for the round
+            foreach ($players as $player) {
+                if ($player->id !== $spy->id) {
+                    $location = array_shift($locations); // Get the next location from the list
+                    $player->update(['location' => $location]);
+                }
+            }
+
+            $players->transform(function ($player) use ($current_user_email) {
+                if ($player->name === $current_user_email) {
+                    $player->makeVisible('location');
+                } else {
+                    $player->makeHidden('location');
+                }
+                return $player;
+            });
+
+            // Return the updated players with their assigned locations
+            return response()->json(['players' => $players, 'round' => $round]);
+
+        } catch (\Exception $e) {
+            // Log the error for debugging purposes
+            \Log::error('Error starting new round: ' . $e->getMessage());
+            
+            // Return a generic error message to the client
+            return response()->json(['error' => 'An error occurred while starting the new round. Please try again later.'], 500);
         }
-
-        $players->transform(function ($player) use ($current_user_email) {
-            if ($player->email === $current_user_email) {
-                $player->makeVisible('location');
-            } else {
-                $player->makeHidden('location');
-            }
-            return $player;
-        });
-        
-        // Return the updated players with their assigned locations
-        return response()->json(['players' => $players, 'round' => $round]);
     }
 
     private function generateRoundLocations()

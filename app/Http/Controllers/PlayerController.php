@@ -73,7 +73,7 @@ class PlayerController extends Controller
         })->get();
 
         $players->transform(function ($player) use ($current_user_email) {
-            if ($player->email === $current_user_email) {
+            if ($player->name === $current_user_email) {
                 $player->makeVisible('location');
             } else {
                 $player->makeHidden('location');

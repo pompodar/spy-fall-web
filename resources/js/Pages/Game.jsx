@@ -36,25 +36,48 @@ export default function Game({ auth, gameId, gameCode }) {
   let userEmail = "";
 
   useEffect(() => {
+    const q = query(collection(db, 'gameRooms'))
+    onSnapshot(q, (querySnapshot) => {
+    })
+  })
+
+  useEffect(() => {    
     const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
       setUser(currentUser);
 
-    userEmail = auth?.user?.email || currentUser?.email || "";
-
-    console.log(userEmail);
-
-
-    // Fetch players for the current game
+        // Fetch players for the current game
   const fetchPlayers = async () => {
     console.log(userEmail);
       try {
           const response = await axios.get(`/api/game/${gameId}/${userEmail}/players`);
 
+          console.log(response);
           setPlayers(response.data.players);
       } catch (error) {
           console.error('Error fetching players:', error);
       }
   };
+
+        const q = query(collection(db, 'gameRooms'))
+        onSnapshot(q, (querySnapshot) => {
+          fetchPlayers();
+        })
+
+    userEmail = auth?.user?.email || currentUser?.email || "";
+
+    console.log(userEmail);
+
+    const fetchAdmin = async () => {
+      try {
+          const response = await axios.get(`/api/game/${userEmail}/admin`);
+
+          setAdmin(response.data);
+      } catch (error) {
+          console.error('Error fetching players:', error);
+      }
+  };
+
+  fetchAdmin();
 
   // Fetch round for the current game
   const fetchRound = async () => {
@@ -71,19 +94,6 @@ export default function Game({ auth, gameId, gameCode }) {
       }
   };
 
-  const q = query(collection(db, 'gameRooms'))
-    onSnapshot(q, (querySnapshot) => {
-      // setGame(querySnapshot.docs.map(doc => ({
-      //   id: doc.id,
-      //   data: doc.data()
-      // })))
-
-      fetchPlayers();
-
-      fetchRound();
-
-    })
-
     fetchPlayers();
 
     fetchRound();
@@ -95,34 +105,50 @@ export default function Game({ auth, gameId, gameCode }) {
 
 
   useEffect(() => {
-      const fetchAdmin = async () => {
-        try {
-            const response = await axios.get(`/api/game/${userEmail}/admin`);
 
-            setAdmin(response.data);
-        } catch (error) {
-            console.error('Error fetching players:', error);
+    // Fetch players for the current game
+  const fetchPlayers = async () => {
+    console.log(userEmail);
+      try {
+          const response = await axios.get(`/api/game/${gameId}/${user?.email}/players`);
+
+          setPlayers(response.data.players);
+
+          console.log(response.data.players);
+      } catch (error) {
+          console.error('Error fetching players:', error);
+      }
+  };  
+
+    fetchPlayers();
+
+    // Fetch round for the current game
+  const fetchRound = async () => {
+    try {
+        const response = await axios.post(`/api/round/${gameId}/${user?.email}`);
+
+        if (!response.data.round) {
+          //setRound(0);
+        } else {
+          setRound(response.data.round);
         }
-    };
+    } catch (error) {
+        console.error('Error fetching players:', error);
+    }
+};
 
-    //fetchAdmin();
 
-    //fetchPlayers();
+    fetchRound();
+
 
   }, [round]);
 
-  useEffect(() => {
-    
-    //fetchRound();
-
-}, [round]);
-
-
   const startNewRound = async () => {
       try {
-          const response = await axios.post(`/api/games/${gameId}/${userEmail}/${round + 1}/rounds`);
+          const response = await axios.post(`/api/games/${gameId}/${user.email}/${round + 1}/rounds`);
           setPlayers(response.data.players);
 
+          console.log(response);
           setRound(round + 1);
 
           try {
@@ -145,6 +171,7 @@ export default function Game({ auth, gameId, gameCode }) {
   };
 
   const leaveGame = async () => {
+    userEmail = auth?.user?.email || user?.email || "";
       try {
           await axios.delete(`/api/game/${gameId}/${userEmail}/leave`);
 
@@ -206,7 +233,7 @@ export default function Game({ auth, gameId, gameCode }) {
         <img className="w-48 rounded-full" src={`${baseUrl}/android-chrome-512x512.png`} alt="Logo" />
 
         <h2 className="text-xl text-brightyellow font-semibold mb-4">Round: {round}</h2>
-        {(players.length < 3) &&
+        {(players.length < 2) &&
           <h2 className="text-sm text-brightyellow italic mb-4">Waiting for players</h2>        
         }
         <div className="max-w-4xl mx-auto flex justify-center items-center">
