@@ -42,11 +42,11 @@ export default function Login({ status, canResetPassword }) {
 
             {status && <div className="mb-4 font-medium text-sm text-green-600">{status}</div>}
 
-            <div className="flex gap-8">
+            <div className="flex flex-col lg:flex-row gap-8">
                 <form onSubmit={submitWithGoogle}>
                     <div>
                         <p className="text-brightyellow mb-2">Log in with Gmail</p>
-                        <PrimaryButton className="ms-4 text-brightyellow" disabled={processing}>
+                        <PrimaryButton className="lg:ms-4 text-brightyellow" disabled={processing}>
                             Log in
                         </PrimaryButton>
                     </div>

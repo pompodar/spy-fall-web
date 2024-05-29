@@ -33,6 +33,9 @@ export default function Game({ auth, gameId, gameCode }) {
 
   const [user, setUser] = useState(null);
 
+  const [newGameCode, setNewGameCode] = useState('');
+  const [joinGameCode, setJoinGameCode] = useState('');
+
   let userEmail = "";
 
   useEffect(() => {    
@@ -74,6 +77,10 @@ export default function Game({ auth, gameId, gameCode }) {
       })
 
     userEmail = auth?.user?.email || currentUser?.email || "";
+
+    if (!userEmail) {
+      router.visit('/login');
+    }
 
     const fetchAdmin = async () => {
       try {
@@ -135,6 +142,9 @@ export default function Game({ auth, gameId, gameCode }) {
 
   }, [round]);
 
+  console.log(user);
+
+
   const startNewRound = async () => {
       userEmail = auth?.user?.email || user?.email || "";
 
@@ -166,6 +176,7 @@ export default function Game({ auth, gameId, gameCode }) {
 
   const leaveGame = async () => {
     userEmail = auth?.user?.email || user?.email || "";
+    console.log(auth);
       try {
           await axios.delete(`/api/game/${gameId}/${userEmail}/leave`);
 
@@ -216,7 +227,56 @@ export default function Game({ auth, gameId, gameCode }) {
       }
   };
 
-  const isSpy = (playerId, spyId) => playerId === spyId;
+  const handleJoinGameSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      // Send request to backend to join the game
+      const response = await axios.post('/api/join-game', { gameCode: gameCode, userEmail: userEmail });
+      console.log('Join game response:', response.data);
+      // Reset the input field after successful submission
+      setJoinGameCode('');
+
+      const gameDocRef = doc(db, "gameRooms", response.data.gameId.toString());
+
+      try {
+        // Get the current data of the game document
+        const gameDocSnap = await getDoc(gameDocRef);
+        if (gameDocSnap.exists()) {
+          
+          // Extract the current players array
+          const currentPlayers = gameDocSnap.data().players || [];
+      
+          // Check if the user is already in the players array
+          if (!currentPlayers.includes(userEmail)) {
+            // Add the new user to the players array
+            const updatedPlayers = [...currentPlayers, userEmail];
+      
+            // Update the game document with the new players array
+            await updateDoc(gameDocRef, {
+              players: updatedPlayers,
+            });
+      
+            console.log('User added to the game successfully');
+          } else {
+            console.log('User already exists in the game');
+          }
+        } else {
+          console.error('Game document does not exist');
+        }
+      } catch (err) {
+        console.error('Error updating game document:', err);
+      }
+      // Redirect to the game window
+      router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
+    } catch (error) {
+      // Handle error if joining game fails
+      console.error('Error joining game:', error.response.data);
+    }
+  };
+
+  userEmail = auth?.user?.email || user?.email || "";
+
+  const isUserInPlayers = () => players.some(player => player.email === userEmail);
 
   return (
     <AuthenticatedLayout user={auth?.user || user?.displayName}>
@@ -237,16 +297,29 @@ export default function Game({ auth, gameId, gameCode }) {
               <AiOutlineSend />
             </button>
           }
-          <button onClick={leaveGame} className="bg-red-500 text-white px-4 py-2 rounded-md">
-            <AiOutlinePoweroff />
-          </button>
+          
+          {isUserInPlayers() && (
+            <button onClick={leaveGame} className="bg-red-500 text-white px-4 py-2 rounded-md">
+              <AiOutlinePoweroff />
+            </button>
+          )}
+
+          {!isUserInPlayers() && (
+            <div className="FormContainer mb-8">
+            <form className="flex flex-col justify-center items-center" onSubmit={handleJoinGameSubmit}>
+                <label className="block mb-2 flex flex-col justify-center items-center">
+                </label>
+                <button className="bg-brightpurple text-brightyellow py-2 px-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Join Game</button>
+            </form>
+            </div>
+          )}
 
         </div>
                 <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {players.map(player => (
             <div key={player.id} className="">
               <h2 className="text-lg text-center text-brightyellow font-semibold mb-2">{player.name} {player.role === 'administrator' && <span className="text-sm text-brightgreen">(Admin)</span>}</h2>
-              <p className="text-center text-red-500">{isSpy(player.id, player.spy_id) ? 'Шпигунець' : player.location}</p>
+              <p className="text-center text-red-500">{player.location}</p>
             </div>
           ))}
         </div>
