@@ -118,10 +118,19 @@ class GameRoomController extends Controller
                 'name' => $user->name,
                 'role' => 'guest',
             ]);
-        }
 
-        // Return the player information
-        return response()->json(['gameId' => $game->id, 'gameCode' => $game->code], 201);
+
+            // Return the player information
+            return response()->json(['gameId' => $game->id, 'gameCode' => $game->code, 'existing_player' => true], 201);
+        } else {
+            if ($existingPlayer->game_room_id == $game->id) {
+
+                // Return the player information
+                return response()->json(['gameId' => $game->id, 'gameCode' => $game->code, 'existing_player' => false], 201);
+            } else {
+                return response()->json(['error' => 'You are still in another game. First leave it and you can join this one.', 'already in another game' => true ], 403);
+            }
+        }
     }
 
     public function leaveGame($gameId, $userEmail)

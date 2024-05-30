@@ -36,6 +36,9 @@ export default function Game({ auth, gameId, gameCode }) {
   const [newGameCode, setNewGameCode] = useState('');
   const [joinGameCode, setJoinGameCode] = useState('');
 
+  const [error, setError] = useState('');
+
+
   let userEmail = "";
 
   useEffect(() => {    
@@ -48,10 +51,21 @@ export default function Game({ auth, gameId, gameCode }) {
           try {
               const response = await axios.get(`/api/game/${gameId}/${userEmail}/players`);
 
+              if (!response.data.players.some(item => item.email === userEmail)) {
+                  alert(`User left the game. Redirecting to home screen...`);
+
+                  router.visit('/');
+
+                  return;
+
+              }
+
               console.log(response);
               setPlayers(response.data.players);
           } catch (error) {
               console.error('Error fetching players:', error);
+              router.visit('/');
+
           }
       };
 
@@ -142,7 +156,7 @@ export default function Game({ auth, gameId, gameCode }) {
 
   }, [round]);
 
-  console.log(user);
+  console.log(user, auth?.user, 'current user');
 
 
   const startNewRound = async () => {
@@ -231,43 +245,67 @@ export default function Game({ auth, gameId, gameCode }) {
     e.preventDefault();
     try {
       // Send request to backend to join the game
-      const response = await axios.post('/api/join-game', { gameCode: gameCode, userEmail: userEmail });
-      console.log('Join game response:', response.data);
-      // Reset the input field after successful submission
-      setJoinGameCode('');
-
-      const gameDocRef = doc(db, "gameRooms", response.data.gameId.toString());
-
       try {
-        // Get the current data of the game document
-        const gameDocSnap = await getDoc(gameDocRef);
-        if (gameDocSnap.exists()) {
-          
-          // Extract the current players array
-          const currentPlayers = gameDocSnap.data().players || [];
-      
-          // Check if the user is already in the players array
-          if (!currentPlayers.includes(userEmail)) {
-            // Add the new user to the players array
-            const updatedPlayers = [...currentPlayers, userEmail];
-      
-            // Update the game document with the new players array
-            await updateDoc(gameDocRef, {
-              players: updatedPlayers,
-            });
-      
-            console.log('User added to the game successfully');
+        const response = await axios.post('/api/join-game', { gameCode: gameCode, userEmail: userEmail });
+        
+        // Handle successful response
+        console.log('Successfully joined the game:', response.data);
+        
+        // Reset the input field after successful submission
+        setJoinGameCode('');
+
+        const gameDocRef = doc(db, "gameRooms", response.data.gameId.toString());
+
+        try {
+          // Get the current data of the game document
+          const gameDocSnap = await getDoc(gameDocRef);
+          if (gameDocSnap.exists()) {
+            
+            // Extract the current players array
+            const currentPlayers = gameDocSnap.data().players || [];
+        
+            // Check if the user is already in the players array
+            if (!currentPlayers.includes(userEmail)) {
+              // Add the new user to the players array
+              const updatedPlayers = [...currentPlayers, userEmail];
+        
+              // Update the game document with the new players array
+              await updateDoc(gameDocRef, {
+                players: updatedPlayers,
+              });
+        
+              console.log('User added to the game successfully');
+            } else {
+              console.log('User already exists in the game');
+            }
           } else {
-            console.log('User already exists in the game');
+            console.error('Game document does not exist');
           }
-        } else {
-          console.error('Game document does not exist');
+        } catch (err) {
+          console.error('Error updating game document:', err);
         }
-      } catch (err) {
-        console.error('Error updating game document:', err);
-      }
-      // Redirect to the game window
-      router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
+        // Redirect to the game window
+        router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
+
+      } catch (error) {
+        // Handle error response
+        if (error.response) {
+          // Server responded with a status other than 200 range
+          console.error('Error response:', error.response.data);
+          setError(error.response.data.error || 'Unknown error');
+        } else if (error.request) {
+          // Request was made but no response received
+          console.error('Error request:', error.request);
+          alert('No response received from the server. Please try again later.');
+        } else {
+          // Something else happened in making the request
+          console.error('Error message:', error.message);
+          alert(`Error joining game: ${error.message}`);
+        }
+      }      
+      
+      console.log('Join game response:', response.data);
+      
     } catch (error) {
       // Handle error if joining game fails
       console.error('Error joining game:', error.response.data);
@@ -292,7 +330,7 @@ export default function Game({ auth, gameId, gameCode }) {
         }
         <div className="max-w-4xl mx-auto flex justify-center items-center">
 
-          {(admin.isAdmin && players.length > 1) &&
+          {(admin.isAdmin && players.length > 1 && isUserInPlayers()) &&
             <button onClick={startNewRound} className="bg-brightgreen text-white px-4 py-2 rounded-md mr-4">
               <AiOutlineSend />
             </button>
@@ -306,11 +344,16 @@ export default function Game({ auth, gameId, gameCode }) {
 
           {!isUserInPlayers() && (
             <div className="FormContainer mb-8">
-            <form className="flex flex-col justify-center items-center" onSubmit={handleJoinGameSubmit}>
-                <label className="block mb-2 flex flex-col justify-center items-center">
-                </label>
-                <button className="bg-brightpurple text-brightyellow py-2 px-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Join Game</button>
-            </form>
+              <form className="flex flex-col justify-center items-center" onSubmit={handleJoinGameSubmit}>
+                  <label className="block mb-2 flex flex-col justify-center items-center">
+                  </label>
+                  <button className="bg-brightpurple text-brightyellow py-2 px-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Join Game</button>
+              </form>
+
+              {error && (
+                  <p className="mt-2 text-center text-red-500">{error}</p>
+              )}
+
             </div>
           )}
 
