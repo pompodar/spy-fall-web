@@ -119,6 +119,7 @@ export default function Welcome({ auth }) {
       } catch (err) {
         console.error('Error updating game document:', err);
       }
+
       // Redirect to the game window
       router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
     } catch (error) {

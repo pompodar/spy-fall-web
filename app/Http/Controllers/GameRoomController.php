@@ -139,6 +139,7 @@ class GameRoomController extends Controller
         $player = Player::where('game_room_id', $gameId)->where('email', $userEmail)->first();
         
         if ($player) {
+
             $player->delete();
 
             // Check if the game has no more players
@@ -147,6 +148,12 @@ class GameRoomController extends Controller
                 // Delete the game room if there are no remaining players
                 GameRoom::where('id', $gameId)->delete();
                 return response()->json(['message' => 'Game deleted successfully'], 200);
+            }
+
+            if ($player->role == 'administrator') {
+                GameRoom::where('id', $gameId)->delete();
+
+                return response()->json(['message' => 'Admin left game and it is deleted successfully.'], 200);
             }
 
             return response()->json(['message' => 'Left the game successfully'], 200);

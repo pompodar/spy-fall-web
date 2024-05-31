@@ -6,6 +6,7 @@ import { AiOutlinePoweroff } from "react-icons/ai";
 import { db } from "./config/firebase";
 import { auth as firebaseAuth } from './config/firebase';
 import { onAuthStateChanged, getAuth } from 'firebase/auth';
+import Modal from './Modal.jsx';
 import {
   collection,
   query, 
@@ -35,6 +36,8 @@ export default function Game({ auth, gameId, gameCode }) {
 
   const [newGameCode, setNewGameCode] = useState('');
   const [joinGameCode, setJoinGameCode] = useState('');
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [error, setError] = useState('');
 
@@ -284,6 +287,7 @@ export default function Game({ auth, gameId, gameCode }) {
         } catch (err) {
           console.error('Error updating game document:', err);
         }
+
         // Redirect to the game window
         router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
 
@@ -336,8 +340,14 @@ export default function Game({ auth, gameId, gameCode }) {
             </button>
           }
           
-          {isUserInPlayers() && (
+          {/* {isUserInPlayers() && (
             <button onClick={leaveGame} className="bg-red-500 text-white px-4 py-2 rounded-md">
+              <AiOutlinePoweroff />
+            </button>
+          )} */}
+
+          {isUserInPlayers() && (
+            <button onClick={() => setIsModalOpen(true)} className="bg-red-500 text-white px-4 py-2 rounded-md">
               <AiOutlinePoweroff />
             </button>
           )}
@@ -367,6 +377,16 @@ export default function Game({ auth, gameId, gameCode }) {
           ))}
         </div>
       </div>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={() => {
+          setIsModalOpen(false);
+          leaveGame();
+        }}
+        title="Confirm Leave Game"
+        message="Are you sure you want to leave the game? As the admin, leaving will end the game for everyone."
+      />
     </AuthenticatedLayout>
   );
 }
