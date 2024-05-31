@@ -1,22 +1,14 @@
-import { Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, router } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import { db } from "./config/firebase";
-import { AuthProvider, useAuth } from './context';
+import { AuthProvider } from './context';
 import { auth as firebaseAuth } from './config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
-  collection,
-  query, 
-  orderBy, 
-  onSnapshot,
-  getDocs,
-  addDoc,
   setDoc,
   updateDoc,
-  deleteDoc,
   getDoc, 
   doc,
 } from "firebase/firestore";
@@ -28,18 +20,13 @@ export default function Welcome({ auth }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
       setUser(currentUser);
+
+      comsole.log("User set:", currentUser);
     });
 
     // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
-
-  const handleImageError = () => {
-      document.getElementById('screenshot-container')?.classList.add('!hidden');
-      document.getElementById('docs-card')?.classList.add('!row-span-1');
-      document.getElementById('docs-card-content')?.classList.add('!flex-row');
-      document.getElementById('background')?.classList.add('!hidden');
-  };
 
   const isAuthenticated = !!(auth?.user || user);
 
@@ -55,9 +42,10 @@ export default function Welcome({ auth }) {
       // Send request to backend to create a new game
       const response = await axios.post(`/api/create-game/${userEmail}`);
       // Set the new game code
-      console.log(response);
       setNewGameCode(response.data.gameId);
       setCreateGameError(null);
+
+      console.log('Successfully created a new game:', response.data);
 
       const gameId = response.data.gameId.toString();
 
@@ -85,7 +73,7 @@ export default function Welcome({ auth }) {
     try {
       // Send request to backend to join the game
       const response = await axios.post('/api/join-game', { gameCode: joinGameCode, userEmail: userEmail });
-      console.log('Join game response:', response.data);
+      console.log('Joined game successfully:', response.data);
       // Reset the input field after successful submission
       setJoinGameCode('');
 
@@ -109,15 +97,15 @@ export default function Welcome({ auth }) {
               players: updatedPlayers,
             });
       
-            console.log('User added to the game successfully');
+            console.log('User added to the game in Firebase successfully');
           } else {
-            console.log('User already exists in the game');
+            console.log('User already exists in the game in Firebase');
           }
         } else {
-          console.error('Game document does not exist');
+          console.error('Game document does not exist in Firebase');
         }
       } catch (err) {
-        console.error('Error updating game document:', err);
+        console.error('Error updating game document in Firebase:', err);
       }
 
       // Redirect to the game window
