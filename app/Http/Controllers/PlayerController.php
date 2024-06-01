@@ -62,7 +62,7 @@ class PlayerController extends Controller
 
         // If the game room doesn't exist, return an error response
         if (!$gameRoom) {
-            return response()->json(['error' => 'Game room not found'], 404);
+            return response()->json(['players' => 'No players. Game room not found.']);
         }
 
         // Retrieve the round of the game room

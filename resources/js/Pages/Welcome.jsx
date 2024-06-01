@@ -3,7 +3,6 @@ import GuestLayout from '@/Layouts/GuestLayout';
 import { Head, router } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import { db } from "./config/firebase";
-import { AuthProvider } from './context';
 import { auth as firebaseAuth } from './config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import {
@@ -21,7 +20,7 @@ export default function Welcome({ auth }) {
     const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
       setUser(currentUser);
 
-      comsole.log("User set:", currentUser);
+      console.log("User set on Auth State Changed in Welcome:", currentUser);
     });
 
     // Cleanup subscription on unmount
@@ -38,6 +37,12 @@ export default function Welcome({ auth }) {
 
   const handleNewGameSubmit = async (e) => {
     e.preventDefault();
+
+    if (!userEmail) {
+
+      console.error("No user email found in Game when starting new game from Welcome page.");
+      return;
+    }
     try {
       // Send request to backend to create a new game
       const response = await axios.post(`/api/create-game/${userEmail}`);
@@ -70,6 +75,17 @@ export default function Welcome({ auth }) {
 
   const handleJoinGameSubmit = async (e) => {
     e.preventDefault();
+    if (!joinGameCode) {
+
+        console.error("No game code found in Game when joining game from Welcome page.");
+        return;
+    }
+
+    if (!userEmail) {
+
+      console.error("No user email found in Game when joining game from Welcome page.");
+      return;
+    }
     try {
       // Send request to backend to join the game
       const response = await axios.post('/api/join-game', { gameCode: joinGameCode, userEmail: userEmail });
@@ -117,7 +133,7 @@ export default function Welcome({ auth }) {
   };
 
     return (
-        <AuthProvider>
+        <div>
             <Head title="Welcome" />
             <div className="bg-transparent text-black/50 dark:bg-black dark:text-white/50">
                 <div className="relative min-h-screen flex flex-col selection:bg-[#FF2D20] selection:text-white">
@@ -252,6 +268,6 @@ export default function Welcome({ auth }) {
                     </div>
                 </div>
             </div>
-        </AuthProvider>
+        </div>
     );
 }

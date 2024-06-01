@@ -32,7 +32,6 @@ export default function Login({ status, canResetPassword }) {
             signInWithGoogle();
         } catch (error) {
             console.error("Google sign-in failed:", error);
-            // Handle error, e.g., show an error message
         }
     };
 
@@ -100,14 +99,14 @@ export default function Login({ status, canResetPassword }) {
                     </div>
 
                     <div className="flex items-center justify-end mt-4">
-                        {canResetPassword && (
+                        {/* {canResetPassword && (
                             <Link
                                 href={route('password.request')}
                                 className="text-brightyellow underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                             >
                                 Forgot your password?
                             </Link>
-                        )}
+                        )} */}
 
                         <PrimaryButton className="ms-4 text-brightyellow" disabled={processing}>
                             Log in
