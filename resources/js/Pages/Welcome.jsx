@@ -55,27 +55,23 @@ export default function Welcome({ auth }) {
       const gameId = response.data.gameId.toString();
 
       try {
-        // Add the document to the 'gameRooms' collection with the custom ID
         await setDoc(doc(db, "gameRooms", gameId), {
           players: [userEmail],
         });
+        router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
         console.log('Game added to Firestore successfully');
       } catch (err) {
         console.error('Error adding game to Firestore:', err);
       }
-
-      // Redirect to the game window
-      router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
     } catch (error) {
-      // Handle error if creating game fails
       console.log('Error creating game:', error.response.data.game_code);
-      setCreateGameError(error.response.data.error + ". Your game code is " + error.response.data.game_code);
+      setCreateGameError(error.response.data.game_code);
     }
   };
 
   const handleJoinGameSubmit = async (e) => {
     e.preventDefault();
-    if (!joinGameCode) {
+    if (!joinGameCode && !createGameError) {
 
         console.error("No game code found in Game when joining game from Welcome page.");
         return;
@@ -88,7 +84,7 @@ export default function Welcome({ auth }) {
     }
     try {
       // Send request to backend to join the game
-      const response = await axios.post('/api/join-game', { gameCode: joinGameCode, userEmail: userEmail });
+      const response = await axios.post('/api/join-game', { gameCode: createGameError ? createGameError : joinGameCode, userEmail: userEmail });
       console.log('Joined game successfully:', response.data);
       // Reset the input field after successful submission
       setJoinGameCode('');
@@ -117,15 +113,13 @@ export default function Welcome({ auth }) {
           } else {
             console.log('User already exists in the game in Firebase');
           }
+          router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
         } else {
           console.error('Game document does not exist in Firebase');
         }
       } catch (err) {
         console.error('Error updating game document in Firebase:', err);
       }
-
-      // Redirect to the game window
-      router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
     } catch (error) {
       // Handle error if joining game fails
       console.error('Error joining game:', error.response.data);
@@ -150,25 +144,31 @@ export default function Welcome({ auth }) {
 
                                 {/* New Game Form */}
                                 <div className="FormContainer mb-8">
-                                <form onSubmit={handleNewGameSubmit}>
-                                    <button className="bg-brightpurple text-brightyellow py-2 px-4 mt-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Create New Game</button>
-                                    {createGameError && <p className="text-red-500 mt-2">{createGameError}</p>}
-                                </form>
+                                {!createGameError && 
+                                  <form onSubmit={handleNewGameSubmit}>
+                                      <button className="bg-brightpurple text-brightyellow py-2 px-4 mt-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Create New Game</button>                                
+                                  </form>
+                                }
                                 </div>
 
                                 {/* Join Game Form */}
                                 <div className="FormContainer mb-8">
                                 <form className="flex flex-col justify-center items-center" onSubmit={handleJoinGameSubmit}>
                                     <label className="block mb-2 flex flex-col justify-center items-center">
-                                    <span className="text-brightyellow">Game Code:</span>
-                                    <input
+                                    {!createGameError && 
+                                    <>
+                                        <span className="text-brightyellow">Game Code:</span>
+                                        <input
                                         className="w-full mt-2 outline-brightyellow p-2 border border-brightyellow text-brightyellow rounded-md focus:outline-none bg-gradient-to-r from-brightpurple to-darkpurple"
                                         type="text"
                                         value={joinGameCode}
-                                        onChange={(e) => setJoinGameCode(e.target.value)}
+                                        onChange={(e) => setCreateGameError(e.target.value)}
                                     />
+                                    </>
+                                    
+                                    }
                                     </label>
-                                    <button className="bg-brightpurple text-brightyellow py-2 px-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Join Game</button>
+                                    <button className="bg-brightpurple text-brightyellow py-2 px-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Join Game {createGameError ? createGameError : ""}</button>
                                 </form>
                                 </div>
                             </div>

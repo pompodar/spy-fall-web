@@ -164,4 +164,18 @@ class GameRoomController extends Controller
         }
     }
 
+    public function getUserGame($user_email, Request $request)
+    {
+        $player = Player::where('email', $user_email)->first();
+
+        if ($player) {
+            $gameRoomId = $player->gameRoom->id;
+            $game = GameRoom::where('id', $gameRoomId)->first(); 
+
+            return response()->json(['players' => $game->players], 201);
+        } else {
+            return response()->json(['players' => []], 404);
+        }
+    }
+
 }

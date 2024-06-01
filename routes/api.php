@@ -33,4 +33,6 @@ Route::post('/games/{gameId}/{userEmail}/{round}/rounds', [RoundController::clas
 
 Route::post('/round/{gameId}/{userEmail}', [RoundController::class, 'getGameRound'])->middleware(['web']);
 
+Route::post('/game/{userEmail}', [GameRoomController::class, 'getUserGame']);
+
 

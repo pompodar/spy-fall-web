@@ -25,40 +25,27 @@ export default function Game({ auth, gameId, gameCode }) {
 
   const [round, setRound] = useState(0);
 
-  const [game, setGame] = useState([]);
-
   const baseUrl = window.location.origin;
 
   const [user, setUser] = useState(null);
 
-  const [newGameCode, setNewGameCode] = useState('');
-  const [joinGameCode, setJoinGameCode] = useState('');
-
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [error, setError] = useState('');
-
-  let newGame = true;
 
   let userEmail = "";
 
   useEffect(() => {    
     const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
       setUser(currentUser);
-
       console.log("User set on Auth State Changed in Game:", currentUser);
-
-      // Fetch players for the current game
-
       const fetchPlayers = async () => {
           if (!gameId) {
-
               console.error("No game id found on Auth State Changed in Game when fetching players.");
               return;
           }
 
           if (!userEmail) {
-
             console.error("No user email found in Game when fetching players on Auth State Changed.");
             return;
           }
@@ -68,51 +55,34 @@ export default function Game({ auth, gameId, gameCode }) {
 
               if (response.data.players === "No players. Game room not found.") {
                   console.log("No players. Game room not found.");
-                  if(!newGame) {
-                      console.log("User had left the game on Auth State Changed. Redirecting from Game page to home screen...");
-                      router.visit('/');
-                      newGame = true;
-                      return;
-                  }
+                  console.log(window.location.href, "game id");
+                  return;
               }
 
               if (!response.data.players.some(item => item.email === userEmail)) {
                   console.log(`User had left the game on Auth State Changed. Redirecting from Game page to home screen...`);
-                  if(!newGame) {
-                    console.log("User had left the game on Auth State Changed. Redirecting from Game page to home screen...");
-                    newGame = true;
-                    router.visit('/');
-                    return;
-                  }
+                  return;
               }
+
               setPlayers(response.data.players);
               console.log("Users fetched successfully in Game page on Auth State Changed:", response.data.players);
           } catch (error) {
               console.error('Error fetching players in Game page on Auth State Changed:', error);
-              if(!newGame) {
-                console.log("User had left the game on Auth State Changed. Redirecting from Game page to home screen...");
-                newGame = true;
-                router.visit('/');
-                return;
-              }
           }
-          newGame = false;
       };
 
-      // Fetch round for the current game
       const fetchRound = async () => {
-          if (!gameId) {
+      if (!gameId) {
+          console.error("No gameId found in Game when fetching round on Auth State Changed.");
+          return;
+      }
 
-              console.error("No gameId found in Game when fetching round on Auth State Changed.");
-              return;
-          }
+      if (!userEmail) {
+        console.error("No user email found in Game when fetching round on Auth State Changed.");
+        return;
+      }
 
-          if (!userEmail) {
-
-            console.error("No user email found in Game when fetching round on Auth State Changed.");
-            return;
-          }
-        try {
+      try {
             const response = await axios.post(`/api/round/${gameId}/${userEmail}`);
 
             if (!response.data.round) {
@@ -126,8 +96,25 @@ export default function Game({ auth, gameId, gameCode }) {
     };
 
       const q = query(collection(db, 'gameRooms'))
-      onSnapshot(q, (querySnapshot) => {
+      onSnapshot(q, async (querySnapshot) => {
+        try {
+          const response = await axios.post(`/api/game/${userEmail}`);
 
+          if (response.data.players) {
+            console.log("Players fetched successfully in Game page on Firebase Changed:", response.data.players);
+            if (!response.data.players.some(item => item.email === userEmail)) {
+              console.log("You are not in this game", response.data.players);
+              router.visit("/");
+            }
+          } else {
+            console.log("Players not fetched in Game page on Firebase Changed:", response.data.players);
+            router.visit("/");
+          }
+      } catch (error) {
+          console.error('Error fetching players on Firebase Changed in Game page:', error);
+          router.visit("/");
+      }
+        
         console.log("Change in firebase detected in Game page on Auth State Changed:", querySnapshot);
         fetchPlayers();
         fetchRound();
@@ -141,9 +128,7 @@ export default function Game({ auth, gameId, gameCode }) {
     }
 
     const fetchAdmin = async () => {
-
       if (!userEmail) {
-
         console.error("No user email found in Game when fetching фвьшт on Auth State Changed.");
         return;
       }
@@ -158,55 +143,44 @@ export default function Game({ auth, gameId, gameCode }) {
     };
 
     fetchAdmin();
-
     fetchPlayers();
-
     fetchRound();
-
   });
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
 
   useEffect(() => {
-
-    // Fetch players for the current game
     const fetchPlayers = async () => {
       if (!gameId) {
-
         console.error("No gameId found in Game when fetching players on page load.");
         return;
     }
 
     if (!userEmail) {
-
       console.error("No user email found in Game when fetching players on page load.");
       return;
     }
-      try {
-          const response = await axios.get(`/api/game/${gameId}/${user?.email}/players`);
 
-          setPlayers(response.data.players);
+    try {
+        const response = await axios.get(`/api/game/${gameId}/${user?.email}/players`);
 
-          console.log('Players feetched successfully on page load in Game page:', response.data.players);
-      } catch (error) {
-          console.error('Error fetching players on page load i n Game page:', error);
-      }
+        setPlayers(response.data.players);
+        console.log('Players feetched successfully on page load in Game page:', response.data.players);
+    } catch (error) {
+        console.error('Error fetching players on page load i n Game page:', error);
+    }
   };  
 
   fetchPlayers();
 
-    // Fetch round for the current game
-    const fetchRound = async () => {
-      if (!gameId) {
-
-        console.error("No gameId found in Game when fetching round on page load.");
-        return;
+  const fetchRound = async () => {
+    if (!gameId) {
+      console.error("No gameId found in Game when fetching round on page load.");
+      return;
     }
 
     if (!userEmail) {
-
       console.error("No user email found in Game when fetching round on page load.");
       return;
     }
@@ -219,13 +193,12 @@ export default function Game({ auth, gameId, gameCode }) {
           setRound(response.data.round);
           console.log("Round fetched successfully on page load in Game page:", response.data.round);
         }
-    } catch (error) {
-        console.error('Error fetching players on page load in game page:', error);
-    }
-};
+        } catch (error) {
+            console.error('Error fetching players on page load in game page:', error);
+        }
+    };
 
     fetchRound();
-
 
   }, [round]);
 
@@ -233,13 +206,11 @@ export default function Game({ auth, gameId, gameCode }) {
       userEmail = auth?.user?.email || user?.email || "";
 
       if (!gameId) {
-
           console.error("No gameId found in Game when starting new round.");
           return;
       }
 
       if (!userEmail) {
-
         console.error("No user email found in Game when starting new round.");
         return;
       }
@@ -247,16 +218,13 @@ export default function Game({ auth, gameId, gameCode }) {
       try {
           const response = await axios.post(`/api/games/${gameId}/${userEmail}/${round + 1}/rounds`);
           setPlayers(response.data.players);
-
           setRound(round + 1);
 
           console.log('New round started successfully in Game page:', response.data.players);
 
           try {
-            // Get the reference to the game document
             const gameDocRef = doc(db, "gameRooms", gameId);
             
-            // Update the game document with the updated players array
             await updateDoc(gameDocRef, {
               round: round + 1,
             });
@@ -275,56 +243,40 @@ export default function Game({ auth, gameId, gameCode }) {
     userEmail = auth?.user?.email || user?.email || "";
 
     if (!gameId) {
-
         console.error("No gameId found in Game when leaving game.");
         return;
     }
 
     if (!userEmail) {
-
       console.error("No user email found in Game when leaving game.");
       return;
     }
       try {
           await axios.delete(`/api/game/${gameId}/${userEmail}/leave`);
-
           console.log('Left game successfully in Game page:', gameId);
 
           try {
-            // Get the reference to the game document
             const gameDocRef = doc(db, "gameRooms", gameId);
             
-            // Get the current data of the game document
             const gameDocSnap = await getDoc(gameDocRef);
             if (gameDocSnap.exists()) {
-              // Extract the current players array
               const currentPlayers = gameDocSnap.data().players || [];
           
-              // Check if the player to remove exists in the players array
               const playerIndex = currentPlayers.indexOf(userEmail);
               if (playerIndex !== -1) {
-                // Remove the player from the players array
                 const updatedPlayers = [...currentPlayers.slice(0, playerIndex), ...currentPlayers.slice(playerIndex + 1)];
           
-                // Update the game document with the updated players array
                 await updateDoc(gameDocRef, {
                   players: updatedPlayers,
                 });
 
-                setPlayers([]);
-                setAdmin("");
-                setRound("");
-                setGame([]);
-                setUser(null);
-                setIsAdmin(false);
-                setNewGameCode('');
-                setJoinGameCode('');
+                if(admin.isAdmin) {
+                  await deleteDoc(gameDocRef);
+                }
 
                 console.log('Player removed from the game in Firebase successfully on leaving game');
           
-                // Check if there are no more players in the game
                 if (updatedPlayers.length === 0) {
-                  // Delete the game document
                   await deleteDoc(gameDocRef);
                   console.log('Game document deleted as there are no more players on leaving game');
                 }
@@ -337,10 +289,7 @@ export default function Game({ auth, gameId, gameCode }) {
           } catch (err) {
             console.error('Error removing player from game on leaving game:', err);
           }
-          
-
           router.visit("/");
-
         } catch (error) {
           console.error('Error leaving game:', error);
       }
@@ -348,45 +297,33 @@ export default function Game({ auth, gameId, gameCode }) {
 
   const handleJoinGameSubmit = async (e) => {
     e.preventDefault();
-
     if (!gameCode) {
-
         console.error("No game code found in Game when joining game from Game page.");
         return;
     }
 
     if (!userEmail) {
-
       console.error("No user email found in Game when joining game from Game page.");
       return;
     }
     try {
-      // Send request to backend to join the game
       try {
         const response = await axios.post('/api/join-game', { gameCode: gameCode, userEmail: userEmail });
         
-        // Handle successful response
         console.log('Successfully joined the game from Game page:', response.data);
-        
-        // Reset the input field after successful submission
         setJoinGameCode('');
 
         const gameDocRef = doc(db, "gameRooms", response.data.gameId.toString());
 
         try {
-          // Get the current data of the game document
           const gameDocSnap = await getDoc(gameDocRef);
           if (gameDocSnap.exists()) {
             
-            // Extract the current players array
             const currentPlayers = gameDocSnap.data().players || [];
         
-            // Check if the user is already in the players array
             if (!currentPlayers.includes(userEmail)) {
-              // Add the new user to the players array
               const updatedPlayers = [...currentPlayers, userEmail];
         
-              // Update the game document with the new players array
               await updateDoc(gameDocRef, {
                 players: updatedPlayers,
               });
@@ -402,26 +339,19 @@ export default function Game({ auth, gameId, gameCode }) {
           console.error('Error updating game document when joining game from Game page:', err);
         }
 
-        // Redirect to the game window
         router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
 
       } catch (error) {
-        // Handle error response
         if (error.response) {
-          // Server responded with a status other than 200 range
           console.error('Error response when joining game from Game page:', error.response.data);
           setError(error.response.data.error || 'Unknown error');
         } else if (error.request) {
-          // Request was made but no response received
           console.error('Error response when joining game from Game page:', error.request);
         } else {
-          // Something else happened in making the request
           console.error('Error response when joining game from Game page:', error.message);
         }
-      }      
-            
+      }            
     } catch (error) {
-      // Handle error if joining game fails
       console.error('Error response when joining game from Game page:', error.response.data);
     }
   };
