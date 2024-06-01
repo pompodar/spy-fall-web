@@ -71,7 +71,7 @@ export default function Game({ auth, gameId, gameCode }) {
                   if(!newGame) {
                       console.log("User had left the game on Auth State Changed. Redirecting from Game page to home screen...");
                       router.visit('/');
-                      newGame = false;
+                      newGame = true;
                       return;
                   }
               }
@@ -80,24 +80,23 @@ export default function Game({ auth, gameId, gameCode }) {
                   console.log(`User had left the game on Auth State Changed. Redirecting from Game page to home screen...`);
                   if(!newGame) {
                     console.log("User had left the game on Auth State Changed. Redirecting from Game page to home screen...");
-                    newGame = false;
+                    newGame = true;
                     router.visit('/');
                     return;
                   }
               }
-
               setPlayers(response.data.players);
-
               console.log("Users fetched successfully in Game page on Auth State Changed:", response.data.players);
           } catch (error) {
               console.error('Error fetching players in Game page on Auth State Changed:', error);
               if(!newGame) {
                 console.log("User had left the game on Auth State Changed. Redirecting from Game page to home screen...");
-                newGame = false;
+                newGame = true;
                 router.visit('/');
                 return;
               }
           }
+          newGame = false;
       };
 
       // Fetch round for the current game
@@ -132,10 +131,6 @@ export default function Game({ auth, gameId, gameCode }) {
         console.log("Change in firebase detected in Game page on Auth State Changed:", querySnapshot);
         fetchPlayers();
         fetchRound();
-
-        setTimeout(() => {
-          newGame = false;
-        }, 1000);
       })
 
     userEmail = auth?.user?.email || currentUser?.email || "";
@@ -175,10 +170,6 @@ export default function Game({ auth, gameId, gameCode }) {
 
 
   useEffect(() => {
-
-    setTimeout(() => {
-      newGame = false;
-    }, 1000);
 
     // Fetch players for the current game
     const fetchPlayers = async () => {
