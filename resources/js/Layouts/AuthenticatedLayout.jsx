@@ -14,9 +14,13 @@ export default function Authenticated({ user, header, children }) {
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
-        setGoogleUser(currentUser);
+            setGoogleUser(currentUser);
 
-        console.log(currentUser);
+            if (currentUser) {
+                console.log("User set on auth state changed in Authenticated layout", currentUser);
+            } else {
+                console.log("User not on on auth state changed in Authenticated layout", currentUser);
+            }
         });
 
         // Cleanup subscription on unmount
@@ -26,9 +30,9 @@ export default function Authenticated({ user, header, children }) {
     const handleLogout = () => {
         const auth = getAuth();
         signOut(auth).then(() => {
-        // Sign-out successful.
+            console.log("User signed-out successfully.");
         }).catch((error) => {
-        // An error happened.
+            console.log("Error when signing-out");
         });
     };
 

@@ -19,8 +19,12 @@ export default function Welcome({ auth }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
       setUser(currentUser);
-
-      console.log("User set on Auth State Changed in Welcome:", currentUser);
+      
+      if (currentUser) {
+          console.log("User set on auth state changed in Authenticated layout", currentUser);
+      } else {
+          console.log("User not on on auth state changed in Authenticated layout", currentUser);
+      }
     });
 
     // Cleanup subscription on unmount
@@ -32,6 +36,7 @@ export default function Welcome({ auth }) {
   const [newGameCode, setNewGameCode] = useState('');
   const [joinGameCode, setJoinGameCode] = useState('');
   const [createGameError, setCreateGameError] = useState(null);
+  const [error, setError] = useState(null);
 
   const userEmail = auth?.user?.email || user?.email || "";
 
@@ -72,8 +77,8 @@ export default function Welcome({ auth }) {
   const handleJoinGameSubmit = async (e) => {
     e.preventDefault();
     if (!joinGameCode && !createGameError) {
-
-        console.error("No game code found in Game when joining game from Welcome page.");
+        setError("Please provide a game code.");
+        console.log("No game code found in Game when joining game from Welcome page.");
         return;
     }
 
@@ -83,10 +88,8 @@ export default function Welcome({ auth }) {
       return;
     }
     try {
-      // Send request to backend to join the game
       const response = await axios.post('/api/join-game', { gameCode: createGameError ? createGameError : joinGameCode, userEmail: userEmail });
       console.log('Joined game successfully:', response.data);
-      // Reset the input field after successful submission
       setJoinGameCode('');
 
       const gameDocRef = doc(db, "gameRooms", response.data.gameId.toString());
@@ -121,8 +124,12 @@ export default function Welcome({ auth }) {
         console.error('Error updating game document in Firebase:', err);
       }
     } catch (error) {
-      // Handle error if joining game fails
-      console.error('Error joining game:', error.response.data);
+      if (error.response.data.message) {
+        setError(error.response.data.message);
+      } else if (error.response.data.error) {
+        setError(error.response.data.error);
+      }
+      console.log('Error joining game:', error.response.message.data);
     }
   };
 
@@ -151,7 +158,10 @@ export default function Welcome({ auth }) {
                                 }
                                 </div>
 
-                                {/* Join Game Form */}
+                                {error && 
+                                  <p className="mt-4 text-red-500 text-center mt-0 mb-4 w-full bg-transparent ">{error}</p>
+                                }
+
                                 <div className="FormContainer mb-8">
                                 <form className="flex flex-col justify-center items-center" onSubmit={handleJoinGameSubmit}>
                                     <label className="block mb-2 flex flex-col justify-center items-center">
