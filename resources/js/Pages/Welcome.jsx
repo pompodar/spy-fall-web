@@ -162,7 +162,7 @@ export default function Welcome({ auth }) {
                                         className="w-full mt-2 outline-brightyellow p-2 border border-brightyellow text-brightyellow rounded-md focus:outline-none bg-gradient-to-r from-brightpurple to-darkpurple"
                                         type="text"
                                         value={joinGameCode}
-                                        onChange={(e) => setCreateGameError(e.target.value)}
+                                        onChange={(e) => setJoinGameCode(e.target.value)}
                                     />
                                     </>
                                     
