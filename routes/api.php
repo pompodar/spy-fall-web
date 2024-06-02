@@ -35,4 +35,7 @@ Route::post('/round/{gameId}/{userEmail}', [RoundController::class, 'getGameRoun
 
 Route::post('/game/{userEmail}', [GameRoomController::class, 'getUserGame']);
 
+Route::post('/code-game/{inviteGameCode}', [GameRoomController::class, 'codeGame']);
+
+
 

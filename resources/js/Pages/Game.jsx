@@ -56,12 +56,10 @@ export default function Game({ auth, gameId, gameCode }) {
               if (response.data.players === "No players. Game room not found.") {
                   console.log("No players. Game room not found.");
                   console.log(window.location.href, "game id");
-                  return;
               }
 
               if (!response.data.players.some(item => item.email === userEmail)) {
-                  console.log(`User had left the game on Auth State Changed. Redirecting from Game page to home screen...`);
-                  return;
+                  console.log(`User had left the game on Auth State Changed.`);
               }
 
               setPlayers(response.data.players);
@@ -112,7 +110,11 @@ export default function Game({ auth, gameId, gameCode }) {
           }
       } catch (error) {
           console.error('Error fetching players on Firebase Changed in Game page:', error);
-          router.visit("/");
+          router.visit('/', {
+            data: {
+              inviteGameCode: gameCode,
+            },
+          })
       }
         
         console.log("Change in firebase detected in Game page on Auth State Changed:", querySnapshot);
@@ -311,7 +313,6 @@ export default function Game({ auth, gameId, gameCode }) {
         const response = await axios.post('/api/join-game', { gameCode: gameCode, userEmail: userEmail });
         
         console.log('Successfully joined the game from Game page:', response.data);
-        setJoinGameCode('');
 
         const gameDocRef = doc(db, "gameRooms", response.data.gameId.toString());
 

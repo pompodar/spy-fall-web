@@ -178,4 +178,15 @@ class GameRoomController extends Controller
         }
     }
 
+    public function codeGame($gameCode, Request $request)
+    {
+        $game = GameRoom::where('code', $gameCode)->first();
+
+        if ($game) {
+            return response()->json(['game' => true], 201);
+        } else {
+            return response()->json(['game' => false], 201);
+        }
+    }
+
 }

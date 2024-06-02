@@ -3,16 +3,18 @@
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
-Route::get('/', function () {
+Route::get('/', function (Request $request) {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
         'canRegister' => Route::has('register'),
         'laravelVersion' => Application::VERSION,
         'phpVersion' => PHP_VERSION,
+        'inviteGameCode' => $request->input('inviteGameCode')
     ]);
-})->name('welcome');;
+})->name('welcome');
 
 Route::get('/game/{gameId}/{gameCode}', function ($gameId, $gameCode) {
     return Inertia::render('Game', [

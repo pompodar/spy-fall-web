@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import React, { useState, useEffect } from 'react';
 import { db } from "./config/firebase";
 import { auth as firebaseAuth } from './config/firebase';
@@ -13,10 +13,40 @@ import {
 } from "firebase/firestore";
 import axios from 'axios';
 
-export default function Welcome({ auth }) {
+export default function Welcome({ auth, data }) {
   const [user, setUser] = useState(null);
+  const [validGameCode, setValidGameCode] = useState(false);
+  const [joinAnotherGame, setAnotherGame] = useState(false);
 
-  useEffect(() => {
+
+  const { props } = usePage();
+  let { inviteGameCode } = props;
+
+  console.log(inviteGameCode);
+
+  useEffect(  () => {
+    async function ifValidGameCode () {
+      if (inviteGameCode) {
+        try {
+          // Send request to backend to create a new game
+          const response = await axios.post(`/api/code-game/${inviteGameCode}`);
+          // Set the new game code
+          if (response.data.game) {
+            setValidGameCode(true);
+          } else {
+            setValidGameCode(false);
+          }
+        } catch (error) {
+          setValidGameCode(false);
+          console.log('Error checking if game code is valid:', error.response);
+        }
+      } else {
+        setValidGameCode(false);
+      }
+    }
+
+    ifValidGameCode();
+
     const unsubscribe = onAuthStateChanged(firebaseAuth, (currentUser) => {
       setUser(currentUser);
       
@@ -76,7 +106,7 @@ export default function Welcome({ auth }) {
 
   const handleJoinGameSubmit = async (e) => {
     e.preventDefault();
-    if (!joinGameCode && !createGameError) {
+    if (!joinGameCode && !createGameError && !inviteGameCode) {
         setError("Please provide a game code.");
         console.log("No game code found in Game when joining game from Welcome page.");
         return;
@@ -88,7 +118,7 @@ export default function Welcome({ auth }) {
       return;
     }
     try {
-      const response = await axios.post('/api/join-game', { gameCode: createGameError ? createGameError : joinGameCode, userEmail: userEmail });
+      const response = await axios.post('/api/join-game', { gameCode: createGameError ? createGameError : joinGameCode ? joinGameCode : inviteGameCode ? inviteGameCode : "", userEmail: userEmail });
       console.log('Joined game successfully:', response.data);
       setJoinGameCode('');
 
@@ -162,24 +192,29 @@ export default function Welcome({ auth }) {
                                   <p className="mt-4 text-red-500 text-center mt-0 mb-4 w-full bg-transparent ">{error}</p>
                                 }
 
-                                <div className="FormContainer mb-8">
+                                <div className="FormContainer mb-8 flex flex-col items-center">
                                 <form className="flex flex-col justify-center items-center" onSubmit={handleJoinGameSubmit}>
                                     <label className="block mb-2 flex flex-col justify-center items-center">
-                                    {!createGameError && 
-                                    <>
-                                        <span className="text-brightyellow">Game Code:</span>
-                                        <input
-                                        className="w-full mt-2 outline-brightyellow p-2 border border-brightyellow text-brightyellow rounded-md focus:outline-none bg-gradient-to-r from-brightpurple to-darkpurple"
-                                        type="text"
-                                        value={joinGameCode}
-                                        onChange={(e) => setJoinGameCode(e.target.value)}
-                                    />
-                                    </>
+                                    {(!createGameError && (!inviteGameCode || !validGameCode)) && 
+                                      <>
+                                          <span className="text-brightyellow">Game Code:</span>
+                                          <input
+                                            className="w-full mt-2 outline-brightyellow p-2 border border-brightyellow text-brightyellow rounded-md focus:outline-none bg-gradient-to-r from-brightpurple to-darkpurple"
+                                            type="text"
+                                            value={joinGameCode}
+                                            onChange={(e) => setJoinGameCode(e.target.value)}
+                                          />
+                                      </>
                                     
                                     }
                                     </label>
-                                    <button className="bg-brightpurple text-brightyellow py-2 px-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Join Game {createGameError ? createGameError : ""}</button>
+                                    <button className="bg-brightpurple text-brightyellow py-2 px-4 rounded-md hover:bg-darkpurple focus:outline-none" type="submit">Join Game {createGameError ? createGameError : (inviteGameCode && validGameCode) ? inviteGameCode : ""}</button>
                                 </form>
+                                {(inviteGameCode && validGameCode) && 
+                                      <button 
+                                      onClick={() => {inviteGameCode = ""; router.visit("/")}}
+                                      className="bg-brightpurple text-brightyellow py-2 px-4 mt-4 rounded-md hover:bg-darkpurple focus:outline-none">Join Another Game</button>     
+                                    }
                                 </div>
                             </div>
                             </AuthenticatedLayout>
