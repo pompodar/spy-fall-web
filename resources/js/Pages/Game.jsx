@@ -204,6 +204,21 @@ export default function Game({ auth, gameId, gameCode }) {
 
     fetchRound();
 
+    const fetchLocation = async () => {
+      try {
+          const location = await axios.post(`/api/location/${gameId}/${userEmail}`);
+          const player = players.find(player => player.email === userEmail);
+
+        } catch {
+          console.log("Error fetching player's location");
+        }
+      }
+
+
+    if (round > 0) {
+      fetchLocation();
+    }
+
   }, [round]);
 
   const startNewRound = async () => {
@@ -371,7 +386,7 @@ export default function Game({ auth, gameId, gameCode }) {
 
         <h2 className="text-xl text-brightyellow font-semibold mb-4">Round: {round}</h2>
         {(players.length < 3) &&
-          <h2 className="text-sm text-brightyellow italic mb-4">Waiting for players</h2>        
+          <h2 className="text-sm text-brightyellow italic mb-4">Waiting for players. There must be three of them at least to start a new game or round.</h2>        
         }
         <div className="max-w-4xl mx-auto flex justify-center items-center">
 

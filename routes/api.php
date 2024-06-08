@@ -37,5 +37,7 @@ Route::post('/game/{userEmail}', [GameRoomController::class, 'getUserGame']);
 
 Route::post('/code-game/{inviteGameCode}', [GameRoomController::class, 'codeGame']);
 
+Route::post('/location/{gameId}/{userEmail}', [RoundController::class, 'getPlayerLocation']);
+
 
 

@@ -138,4 +138,58 @@ class RoundController extends Controller
 
     }
 
+    public function getPlayerLocation($gameId, $userEmail)
+    {
+        $gameRoom = GameRoom::where('id', $gameId)->first();
+
+        if (!$gameRoom) {
+            return response()->json(['error' => 'Game room not found'], 404);
+        }
+
+        $round = $gameRoom->round;
+
+        if (!$round) {
+            return response()->json(['error' => 'Game round 0'], 404);
+        }
+
+        $players = $gameRoom->players;
+
+        if (!$players) {
+            return response()->json(['error' => 'No players found'], 404);
+        }
+
+        $player = Player::where('email', $userEmail)->first();
+
+        if (!$player) {
+            return response()->json(['error' => 'No player found'], 404);
+        }
+
+        if ($player->location) {
+            return response()->json(['error' => 'Location found'], 404);
+        }
+
+        $spy = $players->firstWhere('location', 'Spy');
+
+        if ($spy) {
+            $regularLocations = $players->where('location', '!=', 'Spy')
+            ->whereNotNull('location')
+            ->pluck('location')
+            ->unique()
+            ->toArray();
+            
+            if (count($regularLocations) > 0) {
+                $player->location = $regularLocations[array_rand($regularLocations)];
+            } else {
+                $player->location = $this->generateRoundLocation();
+            }
+        } else {
+            $player->location = 'Spy';
+        }
+
+        $player->save();
+
+        return response()->json(['playerLocation' => $player->location]);
+
+    }
+
 }
