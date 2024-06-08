@@ -7,6 +7,7 @@ import { db } from "./config/firebase";
 import { auth as firebaseAuth } from './config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import Modal from './Modal.jsx';
+import Spinner from './Spinner.jsx';
 import {
   collection,
   query, 
@@ -33,6 +34,8 @@ export default function Game({ auth, gameId, gameCode }) {
 
   const [error, setError] = useState('');
 
+  const [loading, setLoading] = useState(false);
+
   let userEmail = "";
 
   useEffect(() => {    
@@ -41,12 +44,12 @@ export default function Game({ auth, gameId, gameCode }) {
       console.log("User set on Auth State Changed in Game:", currentUser);
       const fetchPlayers = async () => {
           if (!gameId) {
-              console.error("No game id found on Auth State Changed in Game when fetching players.");
+              console.log("No game id found on Auth State Changed in Game when fetching players.");
               return;
           }
 
           if (!userEmail) {
-            console.error("No user email found in Game when fetching players on Auth State Changed.");
+            console.log("No user email found in Game when fetching players on Auth State Changed.");
             return;
           }
 
@@ -55,7 +58,6 @@ export default function Game({ auth, gameId, gameCode }) {
 
               if (response.data.players === "No players. Game room not found.") {
                   console.log("No players. Game room not found.");
-                  console.log(window.location.href, "game id");
               }
 
               if (!response.data.players.some(item => item.email === userEmail)) {
@@ -65,18 +67,18 @@ export default function Game({ auth, gameId, gameCode }) {
               setPlayers(response.data.players);
               console.log("Users fetched successfully in Game page on Auth State Changed:", response.data.players);
           } catch (error) {
-              console.error('Error fetching players in Game page on Auth State Changed:', error);
+              console.log('Error fetching players in Game page on Auth State Changed:', error);
           }
       };
 
       const fetchRound = async () => {
       if (!gameId) {
-          console.error("No gameId found in Game when fetching round on Auth State Changed.");
+          console.log("No gameId found in Game when fetching round on Auth State Changed.");
           return;
       }
 
       if (!userEmail) {
-        console.error("No user email found in Game when fetching round on Auth State Changed.");
+        console.log("No user email found in Game when fetching round on Auth State Changed.");
         return;
       }
 
@@ -89,7 +91,7 @@ export default function Game({ auth, gameId, gameCode }) {
               console.log("Round fetched successfully in Game page on Auth State Changed:", response.data.round);
             }
         } catch (error) {
-            console.error('Error fetching players on Auth State Changed in Game page:', error);
+            console.log('Error fetching players on Auth State Changed in Game page:', error);
         }
     };
 
@@ -109,7 +111,7 @@ export default function Game({ auth, gameId, gameCode }) {
             router.visit("/");
           }
       } catch (error) {
-          console.error('Error fetching players on Firebase Changed in Game page:', error);
+          console.log('Error fetching players on Firebase Changed in Game page:', error);
           router.visit('/', {
             data: {
               inviteGameCode: gameCode,
@@ -125,13 +127,13 @@ export default function Game({ auth, gameId, gameCode }) {
     userEmail = auth?.user?.email || currentUser?.email || "";
 
     if (!userEmail) {
-      console.error("No user email found in Game when fetching players on Auth State Changed. Redirecting to login...");
+      console.log("No user email found in Game when fetching players on Auth State Changed. Redirecting to login...");
       router.visit('/login');
     }
 
     const fetchAdmin = async () => {
       if (!userEmail) {
-        console.error("No user email found in Game when fetching фвьшт on Auth State Changed.");
+        console.log("No user email found in Game when fetching фвьшт on Auth State Changed.");
         return;
       }
       try {
@@ -140,7 +142,7 @@ export default function Game({ auth, gameId, gameCode }) {
           setAdmin(response.data);
           console.log("Admin fetched successfully in Game page on Auth State Changed:", response.data);
       } catch (error) {
-          console.error('Error fetching players on Auth State Changed:', error);
+          console.log('Error fetching players on Auth State Changed:', error);
       }
     };
 
@@ -155,12 +157,12 @@ export default function Game({ auth, gameId, gameCode }) {
   useEffect(() => {
     const fetchPlayers = async () => {
       if (!gameId) {
-        console.error("No gameId found in Game when fetching players on page load.");
+        console.log("No gameId found in Game when fetching players on page load.");
         return;
     }
 
     if (!userEmail) {
-      console.error("No user email found in Game when fetching players on page load.");
+      console.log("No user email found in Game when fetching players on page load.");
       return;
     }
 
@@ -170,7 +172,7 @@ export default function Game({ auth, gameId, gameCode }) {
         setPlayers(response.data.players);
         console.log('Players feetched successfully on page load in Game page:', response.data.players);
     } catch (error) {
-        console.error('Error fetching players on page load i n Game page:', error);
+        console.log('Error fetching players on page load i n Game page:', error);
     }
   };  
 
@@ -178,12 +180,12 @@ export default function Game({ auth, gameId, gameCode }) {
 
   const fetchRound = async () => {
     if (!gameId) {
-      console.error("No gameId found in Game when fetching round on page load.");
+      console.log("No gameId found in Game when fetching round on page load.");
       return;
     }
 
     if (!userEmail) {
-      console.error("No user email found in Game when fetching round on page load.");
+      console.log("No user email found in Game when fetching round on page load.");
       return;
     }
 
@@ -196,7 +198,7 @@ export default function Game({ auth, gameId, gameCode }) {
           console.log("Round fetched successfully on page load in Game page:", response.data.round);
         }
         } catch (error) {
-            console.error('Error fetching players on page load in game page:', error);
+            console.log('Error fetching players on page load in game page:', error);
         }
     };
 
@@ -208,14 +210,16 @@ export default function Game({ auth, gameId, gameCode }) {
       userEmail = auth?.user?.email || user?.email || "";
 
       if (!gameId) {
-          console.error("No gameId found in Game when starting new round.");
+          console.log("No gameId found in Game when starting new round.");
           return;
       }
 
       if (!userEmail) {
-        console.error("No user email found in Game when starting new round.");
+        console.log("No user email found in Game when starting new round.");
         return;
       }
+
+      setLoading(true);
 
       try {
           const response = await axios.post(`/api/games/${gameId}/${userEmail}/${round + 1}/rounds`);
@@ -234,10 +238,12 @@ export default function Game({ auth, gameId, gameCode }) {
             console.log('New round started successfully in Firebase in Game page:', response.data.players);
 
           } catch (err) {
-            console.error('Error setting round for game in firebase after starting new round :', err);
+            console.log('Error setting round for game in firebase after starting new round :', err);
           }
       } catch (error) {
-          console.error('Error starting new round in Game page:', error);
+          console.log('Error starting new round in Game page:', error);
+      } finally {
+        setLoading(false)
       }
   };
 
@@ -245,14 +251,17 @@ export default function Game({ auth, gameId, gameCode }) {
     userEmail = auth?.user?.email || user?.email || "";
 
     if (!gameId) {
-        console.error("No gameId found in Game when leaving game.");
+        console.log("No gameId found in Game when leaving game.");
         return;
     }
 
     if (!userEmail) {
-      console.error("No user email found in Game when leaving game.");
+      console.log("No user email found in Game when leaving game.");
       return;
     }
+
+    setLoading(true);
+
       try {
           await axios.delete(`/api/game/${gameId}/${userEmail}/leave`);
           console.log('Left game successfully in Game page:', gameId);
@@ -286,74 +295,65 @@ export default function Game({ auth, gameId, gameCode }) {
                 console.log('Player does not exist in the game on leaving game');
               }
             } else {
-              console.error('Game document does not exist on leaving game');
+              console.log('Game document does not exist on leaving game');
             }
           } catch (err) {
-            console.error('Error removing player from game on leaving game:', err);
+            console.log('Error removing player from game on leaving game:', err);
           }
           router.visit("/");
         } catch (error) {
-          console.error('Error leaving game:', error);
+          console.log('Error leaving game:', error);
+      } finally {
+        setLoading(false)
       }
   };
 
   const handleJoinGameSubmit = async (e) => {
     e.preventDefault();
     if (!gameCode) {
-        console.error("No game code found in Game when joining game from Game page.");
-        return;
+      console.log("No game code found in Game when joining game from Game page.");
+      return;
     }
 
     if (!userEmail) {
-      console.error("No user email found in Game when joining game from Game page.");
+      console.log("No user email found in Game when joining game from Game page.");
       return;
     }
+
+    setLoading(true)
     try {
-      try {
-        const response = await axios.post('/api/join-game', { gameCode: gameCode, userEmail: userEmail });
-        
-        console.log('Successfully joined the game from Game page:', response.data);
+      const response = await axios.post('/api/join-game', { gameCode, userEmail });
+      console.log('Successfully joined the game from Game page:', response.data);
 
-        const gameDocRef = doc(db, "gameRooms", response.data.gameId.toString());
-
-        try {
-          const gameDocSnap = await getDoc(gameDocRef);
-          if (gameDocSnap.exists()) {
-            
-            const currentPlayers = gameDocSnap.data().players || [];
-        
-            if (!currentPlayers.includes(userEmail)) {
-              const updatedPlayers = [...currentPlayers, userEmail];
-        
-              await updateDoc(gameDocRef, {
-                players: updatedPlayers,
-              });
-        
-              console.log('User added to the game in Firebase successfully when joining game from Game page');
-            } else {
-              console.log('User already exists in tFirebase he game when joining game from Game page');
-            }
-          } else {
-            console.error('Game document does not exist when joining game from Game page');
-          }
-        } catch (err) {
-          console.error('Error updating game document when joining game from Game page:', err);
-        }
-
-        router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
-
-      } catch (error) {
-        if (error.response) {
-          console.error('Error response when joining game from Game page:', error.response.data);
-          setError(error.response.data.error || 'Unknown error');
-        } else if (error.request) {
-          console.error('Error response when joining game from Game page:', error.request);
+      const gameDocRef = doc(db, "gameRooms", response.data.gameId.toString());
+      const gameDocSnap = await getDoc(gameDocRef);
+      if (gameDocSnap.exists()) {
+        const currentPlayers = gameDocSnap.data().players || [];
+        if (!currentPlayers.includes(userEmail)) {
+          const updatedPlayers = [...currentPlayers, userEmail];
+          await updateDoc(gameDocRef, {
+            players: updatedPlayers,
+          });
+          console.log('User added to the game in Firebase successfully when joining game from Game page');
         } else {
-          console.error('Error response when joining game from Game page:', error.message);
+          console.log('User already exists in the game when joining game from Game page');
         }
-      }            
+      } else {
+        console.log('Game document does not exist when joining game from Game page');
+      }
+
+      router.visit(`/game/${response.data.gameId}/${response.data.gameCode}`);
     } catch (error) {
-      console.error('Error response when joining game from Game page:', error.response.data);
+      if (error.response) {
+        console.log('Error response when joining game from Game page:', error.response.data);
+        setError(error.response.data.error || 'Unknown error');
+      } else if (error.request) {
+        console.log('Error request when joining game from Game page:', error.request);
+      } else {
+        console.log('Error message when joining game from Game page:', error.message);
+      }
+    } finally {
+      setLoading(false); // Stop the spinner
     }
   };
 
@@ -412,6 +412,7 @@ export default function Game({ auth, gameId, gameCode }) {
           ))}
         </div>
       </div>
+      {loading && <Spinner />}
       <Modal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

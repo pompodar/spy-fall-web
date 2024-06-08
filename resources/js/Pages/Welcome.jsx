@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from "./config/firebase";
 import { auth as firebaseAuth } from './config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import Spinner from './Spinner.jsx';
 import {
   setDoc,
   updateDoc,
@@ -18,6 +19,7 @@ export default function Welcome({ auth, data }) {
   const [validGameCode, setValidGameCode] = useState(false);
   const [joinAnotherGame, setAnotherGame] = useState(false);
 
+  const [loading, setLoading] = useState(false);
 
   const { props } = usePage();
   let { inviteGameCode } = props;
@@ -74,10 +76,12 @@ export default function Welcome({ auth, data }) {
     e.preventDefault();
 
     if (!userEmail) {
-
       console.error("No user email found in Game when starting new game from Welcome page.");
       return;
     }
+
+    setLoading(true)
+
     try {
       // Send request to backend to create a new game
       const response = await axios.post(`/api/create-game/${userEmail}`);
@@ -101,6 +105,8 @@ export default function Welcome({ auth, data }) {
     } catch (error) {
       console.log('Error creating game:', error.response.data.game_code);
       setCreateGameError(error.response.data.game_code);
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -117,6 +123,9 @@ export default function Welcome({ auth, data }) {
       console.error("No user email found in Game when joining game from Welcome page.");
       return;
     }
+
+    setLoading(true)
+
     try {
       const response = await axios.post('/api/join-game', { gameCode: createGameError ? createGameError : joinGameCode ? joinGameCode : inviteGameCode ? inviteGameCode : "", userEmail: userEmail });
       console.log('Joined game successfully:', response.data);
@@ -160,6 +169,8 @@ export default function Welcome({ auth, data }) {
         setError(error.response.data.error);
       }
       console.log('Error joining game:', error.response.message.data);
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -217,6 +228,7 @@ export default function Welcome({ auth, data }) {
                                     }
                                 </div>
                             </div>
+                            {loading && <Spinner />}
                             </AuthenticatedLayout>
                         ) : (
                             <GuestLayout>
