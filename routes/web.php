@@ -38,8 +38,3 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
-
-Route::get('/users', function () {
-    $users = User::all();
-    return $users;
-})->middleware(['auth','verified']);
