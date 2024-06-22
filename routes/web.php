@@ -5,6 +5,8 @@ use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Models\User;
+use App\Http\Middleware\EnsureEmailIsVerified;
 
 Route::get('/', function (Request $request) {
     return Inertia::render('Welcome', [
@@ -25,13 +27,19 @@ Route::get('/game/{gameId}/{gameCode}', function ($gameId, $gameCode) {
         'gameId' => $gameId,
         'gameCode' => $gameCode,
     ]);
-})->name('game');
+})->middleware(EnsureEmailIsVerified::class);;
+;
 // ->middleware(['auth', 'verified']);
 
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profilße', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
 require __DIR__.'/auth.php';
+
+Route::get('/users', function () {
+    $users = User::all();
+    return $users;
+})->middleware(['auth','verified']);
