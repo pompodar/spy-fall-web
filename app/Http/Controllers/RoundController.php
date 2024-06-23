@@ -6,6 +6,7 @@ use App\Models\Round;
 use Illuminate\Http\Request;
 use App\Models\Player;
 use App\Models\GameRoom;
+use Illuminate\Support\Facades\DB;
 
 class RoundController extends Controller
 {
@@ -130,6 +131,13 @@ class RoundController extends Controller
 
     }
 
+    /**
+     * Retrieves the location of a player in a game round.
+     *
+     * @param int $gameId The ID of the game room.
+     * @param string $userEmail The email of the user.
+     * @return \Illuminate\Http\JsonResponse The player's location or an error response.
+     */
     public function getPlayerLocation($gameId, $userEmail)
     {
         $gameRoom = GameRoom::where('id', $gameId)->first();
