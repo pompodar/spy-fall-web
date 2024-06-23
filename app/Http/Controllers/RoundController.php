@@ -57,21 +57,18 @@ class RoundController extends Controller
     public function startNewRound(Request $request, $gameId, $userEmail, $round)
     {
         try {
-            $current_user_email = $request->user()?->email ?? $userEmail;
-            
-            // Generate a set of locations for the round (excluding the spy location)
-            $location = $this->generateRoundLocation();
+            DB::beginTransaction();
 
+            $current_user_email = $request->user()?->email ?? $userEmail;
+            $location = $this->generateRoundLocation();
             $game = GameRoom::where('id', $gameId)->first();
 
             if (!$game) {
                 return response()->json(['error' => 'Game not found.'], 404);
             }
 
-            // Update the round attribute
             $game->update(['round' => $round]);
-            
-            // Randomly choose one player as the spy
+
             $players = $game->players;
 
             if (count($players) === 0) {
@@ -81,8 +78,7 @@ class RoundController extends Controller
             $spyIndex = rand(0, count($players) - 1);
             $spy = $players[$spyIndex];
             $spy->update(['location' => 'Spy']);
-            
-            // Assign a regular location to each player for the round
+
             foreach ($players as $player) {
                 if ($player->id !== $spy->id) {
                     $player->update(['location' => $location]);
@@ -98,21 +94,20 @@ class RoundController extends Controller
                 return $player;
             });
 
-            // Return the updated players with their assigned locations
+            DB::commit();
+
             return response()->json(['players' => $players, 'round' => $round]);
 
         } catch (\Exception $e) {
-            // Log the error for debugging purposes
+            DB::rollBack();
             \Log::error('Error starting new round: ' . $e->getMessage());
             
-            // Return a generic error message to the client
             return response()->json(['error' => 'An error occurred while starting the new round. Please try again later.'], 500);
         }
     }
 
     private function generateRoundLocation()
     {
-        // Define the list of regular locations (excluding the spy location)
         $locations = ['Казино', 'Космічна станція', 'Цирк', 'Піратський корабель', 'Пляж', 'Кінотеатр', 'Кімната'];
 
         $randomLocationKey = array_rand($locations);
@@ -125,15 +120,12 @@ class RoundController extends Controller
     {
         $gameRoom = GameRoom::where('id', $gameId)->first();
 
-        // If the game room doesn't exist, return an error response
         if (!$gameRoom) {
             return response()->json(['error' => 'Game room not found'], 404);
         }
 
-        // Retrieve the round of the game room
         $round = $gameRoom->round;
 
-        // Return the players as JSON response
         return response()->json(['round' => $round]);
 
     }

@@ -60,12 +60,10 @@ class PlayerController extends Controller
 
         $gameRoom = GameRoom::where('id', $gameId)->first();
 
-        // If the game room doesn't exist, return an error response
         if (!$gameRoom) {
             return response()->json(['players' => 'No players. Game room not found.']);
         }
 
-        // Retrieve the round of the game room
         $round = $gameRoom->round;
 
         // Retrieve players based on the provided game code
@@ -82,25 +80,20 @@ class PlayerController extends Controller
             return $player;
         });
 
-        // Return the players as JSON response
         return response()->json(['players' => $players, 'round' => $round]);
 
     }
 
     public function getAdmin(Request $request, $userEmail)
     {
-        // Retrieve the player based on the provided username
         $player = Player::where('email', $userEmail)->first();
     
-        // If the player doesn't exist, return an error response
         if (!$player) {
             return response()->json(['error' => 'Player not found'], 404);
         }
     
-        // Check if the player is an administrator
         $isAdmin = $player->role === 'administrator';
     
-        // Return whether the player is an administrator as a JSON response
         return response()->json(['isAdmin' => $isAdmin]);
     }
 }
