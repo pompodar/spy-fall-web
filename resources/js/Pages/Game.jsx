@@ -379,7 +379,7 @@ export default function Game({ auth, gameId, gameCode }) {
   return (
     <AuthenticatedLayout user={auth?.user || user?.displayName}>
       
-      <Head title="Spy" />
+      <Head title="Spy Online" />
       <div className="max-w-4xl mx-auto px-4 py-8 flex flex-col justify-center items-center bg-background">
         <h1 className="text-3xl text-brightyellow font-bold mb-4">Game {gameCode}</h1>
         <img className="w-48 rounded-full" src={`${baseUrl}/android-chrome-512x512.png`} alt="Logo" />

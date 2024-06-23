@@ -183,7 +183,7 @@ export default function Welcome({ auth, data }) {
 
                         {(isAuthenticated) ? (
                             <AuthenticatedLayout user={auth.user || user}>
-                            <Head title="Spy" />
+                            <Head title="Spy Online" />
 
                               <div className="GameLobby bg-gradient-to-r from-brightpurple to-darkpurple p-4 flex flex-col justify-center items-center">
 
@@ -232,8 +232,8 @@ export default function Welcome({ auth, data }) {
                             </AuthenticatedLayout>
                         ) : (
                             <GuestLayout>
-                            <Head title="Spy" />
-                                <h1 className="text-3xl text-center bg-transparent text-brightyellow font-bold mb-4">Welcome to Spy!</h1>
+                            <Head title="Spy Online" />
+                                <h1 className="text-3xl text-center bg-transparent text-brightyellow font-bold mb-4">Welcome to Spy Online!</h1>
                                 <img className="w-48 text-center rounded-full" src="android-chrome-512x512.png" alt="Logo" />
 
                                 <p className="mt-4 text-brightyellow w-full bg-transparent ">
